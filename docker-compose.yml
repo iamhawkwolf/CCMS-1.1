@@ -1,0 +1,13 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ccms
+      POSTGRES_PASSWORD: ccms
+      POSTGRES_DB: ccms
+    ports:
+      - "5432:5432"
+    volumes:
+      - ccms_pg:/var/lib/postgresql/data
+volumes:
+  ccms_pg:
