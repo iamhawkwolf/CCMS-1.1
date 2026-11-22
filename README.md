@@ -132,5 +132,3 @@ Two deliberate adjustments, both checked with a contrast and colour-blindness va
 - Green and red are almost indistinguishable to red-green colour-blind readers, so they are never the only signal: every green status has a ✓ and a label, every red one a ✕ and a label, and blue a dot. Chart colour is blue because green and red are reserved for good and bad.
 
 There is a single light theme; the reference has no dark variant. Charts (`src/components/charts.tsx`) have hover tooltips, a "view as table" fallback, and a whole-number axis. `npm test` covers the data bucketing behind them.
-
-To re-check that no stray colour crept in, a browser audit that reads every painted colour on every page lived in the scratch work for this change; the rule it enforced is simple: every colour must be a grey or a shade of blue, green or red.
