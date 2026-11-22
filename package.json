@@ -13,7 +13,11 @@
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",
-    "db:reset": "prisma migrate reset --force"
+    "db:reset": "prisma migrate reset --force",
+    "worker": "tsx scripts/worker.ts",
+    "jobs:run": "tsx scripts/run-jobs.ts",
+    "templates:print": "tsx scripts/print-templates.ts",
+    "test:integration": "vitest run -c vitest.integration.config.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",

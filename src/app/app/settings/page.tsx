@@ -12,13 +12,17 @@ export const metadata: Metadata = { title: "Settings" };
 
 export default async function SettingsPage() {
   const ctx = await requireAdmin();
-  const [states, log, team, clientCount, biz] = await Promise.all([
+  const [states, log, team, clientCount, biz, jobs, failed] = await Promise.all([
     featuresFor(ctx.consultancyId, ctx.plan),
     db.featureChangeLog.findMany({ where: { consultancyId: ctx.consultancyId }, orderBy: { changedAt: "desc" }, take: 12 }),
     db.user.findMany({ where: { consultancyId: ctx.consultancyId, role: { not: "CLIENT_USER" } }, orderBy: { createdAt: "asc" } }),
     db.client.count({ where: { consultancyId: ctx.consultancyId } }),
     db.consultancy.findUniqueOrThrow({ where: { id: ctx.consultancyId } }),
+    db.jobState.findMany({ orderBy: { name: "asc" }, select: { name: true, lastFinishedAt: true, lastOk: true } }),
+    db.notification.count({ where: { consultancyId: ctx.consultancyId, channel: "WHATSAPP", status: "FAILED" } }),
   ]);
+  const heartbeat = jobs.find((j) => j.name === "deliver")?.lastFinishedAt;
+  const running = !!heartbeat && Date.now() - heartbeat.getTime() < 10 * 60_000;
   const names = new Map(team.map((u) => [u.id, u.name]));
   const limits = PLAN_LIMITS[ctx.plan];
 
@@ -76,6 +80,19 @@ export default async function SettingsPage() {
               <div className="flex justify-between"><dt className="dim">Clients</dt><dd>{clientCount} / {limits.maxClients ?? "unlimited"}</dd></div>
               <div className="flex justify-between"><dt className="dim">Team</dt><dd>{team.length} / {limits.maxTeamMembers ?? "unlimited"}</dd></div>
             </dl>
+          </Card>
+          <Card>
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="h-section">Automation</h2>
+              {running ? <Badge tone="mint">Running</Badge> : <Badge tone="rose">Not running</Badge>}
+            </div>
+            <p className="dim mb-3 mt-1 text-sm">{running ? "Reminders and alerts are being sent on schedule." : "The scheduler has not run in the last 10 minutes, so no reminders or alerts are going out."}</p>
+            <ul className="grid gap-1.5 text-sm">
+              {jobs.map((j) => (
+                <li key={j.name} className="flex items-center justify-between gap-2"><span className="dim">{j.name.replace(/-/g, " ")}</span><span className="faint text-xs">{j.lastFinishedAt ? `${j.lastOk ? "" : "failed · "}${fmtDate(j.lastFinishedAt)}` : "never run"}</span></li>
+              ))}
+            </ul>
+            {failed > 0 && <p className="mt-3 text-sm"><Badge tone="rose">{failed} WhatsApp message{failed === 1 ? "" : "s"} failed</Badge></p>}
           </Card>
           <Card>
             <h2 className="h-section mb-3">Team</h2>

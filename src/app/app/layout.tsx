@@ -7,6 +7,7 @@ import { signOut } from "../actions-auth";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const ctx = await requireStaff();
+  const unread = await db.notification.count({ where: { channel: "IN_APP", to: ctx.userId, readAt: null } });
   const rows = await db.featureSetting.findMany({ where: { consultancyId: ctx.consultancyId }, select: { scope: true, key: true, enabled: true } });
   const account: SettingMap = {};
   for (const r of rows) if (r.scope === "ACCOUNT") (account as Record<string, boolean>)[r.key] = r.enabled;
@@ -23,6 +24,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     { href: "/app", label: "Dashboard", icon: "◉" },
     { href: "/app/clients", label: "Clients", icon: "◈" },
     { href: "/app/tasks", label: "Tasks", icon: "✦" },
+    { href: "/app/inbox", label: "Inbox", icon: "✉", badge: unread },
     ...(visible("requisition_tracker") ? [{ href: "/app/requisitions", label: "Requisitions", icon: "❖" }] : []),
     ...(visible("invoicing") ? [{ href: "/app/invoices", label: "Invoices", icon: "₹" }] : []),
     ...(ctx.role === "ADMIN" ? [{ href: "/app/settings", label: "Settings", icon: "⚙" }] : []),

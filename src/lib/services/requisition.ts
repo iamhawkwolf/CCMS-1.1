@@ -3,7 +3,7 @@ import type { Plan } from "@prisma/client";
 import { db } from "@/lib/db";
 import { isFeatureOn } from "@/lib/features/server";
 import { maskContactDetails } from "@/lib/jd/mask";
-import { queueNotification } from "@/lib/notify";
+import { queueSafely } from "@/lib/notify";
 import { canMove, emailKey, phoneKey, type Stage, STAGE_LABEL } from "@/lib/requisition/stages";
 
 export interface ProfileInput {
@@ -60,7 +60,8 @@ export async function addProfile(req: { id: string; clientId: string; consultanc
 
   const contact = await db.clientContact.findFirst({ where: { clientId: req.clientId, phone: { not: null } }, orderBy: { isPrimary: "desc" } });
   if (contact?.phone) {
-    await queueNotification({ consultancyId: req.consultancyId, plan, clientId: req.clientId, channel: "WHATSAPP", to: contact.phone, template: "new_profile_submitted", payload: { requisition: req.title, candidate: input.name } });
+    const consultancy = await db.consultancy.findUniqueOrThrow({ where: { id: req.consultancyId }, select: { name: true } });
+    await queueSafely({ consultancyId: req.consultancyId, plan, clientId: req.clientId, channel: "WHATSAPP", to: contact.phone, template: "new_profile_submitted", payload: { consultancy: consultancy.name, requisition: req.title, candidate: input.name }, dedupeKey: `profile-submitted:${profile.id}` });
   }
   return { ok: true, profileId: profile.id, warning };
 }
@@ -83,7 +84,7 @@ export async function moveProfile(profileId: string, to: Stage, opts: { comment?
   });
 
   if (opts.notifyUserId) {
-    await queueNotification({ consultancyId: opts.consultancyId, plan: opts.plan, clientId: opts.clientId, channel: "IN_APP", to: opts.notifyUserId, template: "profile_stage_changed", payload: { candidate: profile.name, requisition: profile.requisition.title, stage: to, comment: opts.comment ?? null } });
+    await queueSafely({ consultancyId: opts.consultancyId, plan: opts.plan, clientId: opts.clientId, channel: "IN_APP", to: opts.notifyUserId, template: "profile_stage_changed", payload: { candidate: profile.name, requisition: profile.requisition.title, stage: to, comment: opts.comment ?? null } });
   }
   return { ok: true };
 }

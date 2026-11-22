@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-export interface NavItem { href: string; label: string; icon: string }
+export interface NavItem { href: string; label: string; icon: string; badge?: number }
 
 export function Sidebar({ items, brand, user, signOut }: { items: NavItem[]; brand: string; user: string; signOut: () => Promise<void> }) {
   const path = usePathname();
@@ -19,6 +19,7 @@ export function Sidebar({ items, brand, user, signOut }: { items: NavItem[]; bra
             <Link key={i.href} href={i.href} aria-current={active ? "page" : undefined}>
               <span aria-hidden className="w-5 text-center">{i.icon}</span>
               {i.label}
+              {i.badge ? <span className="badge b-pink ml-auto" aria-label={`${i.badge} unread`}>{i.badge}</span> : null}
             </Link>
           );
         })}

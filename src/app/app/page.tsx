@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { clientScope, requireStaff } from "@/lib/auth/context";
+import { addDays, istToday } from "@/lib/time";
 import { Badge, ButtonLink, Card, Empty, PageHeader, Stat } from "@/components/ui";
 
 export const metadata: Metadata = { title: "Dashboard" };
@@ -11,9 +12,8 @@ export default async function Dashboard() {
   const clients = await db.client.findMany({ where: { ...clientScope(ctx), active: true }, orderBy: { name: "asc" }, select: { id: true, name: true, state: true } });
   const ids = clients.map((c) => c.id);
 
-  const startOfToday = new Date();
-  startOfToday.setUTCHours(0, 0, 0, 0);
-  const weekAhead = new Date(startOfToday.getTime() + 7 * 86400000);
+  const startOfToday = istToday(new Date());
+  const weekAhead = addDays(startOfToday, 7);
 
   const [overdueBy, soonBy, openReqBy, pendingBy] = await Promise.all([
     db.task.groupBy({ by: ["clientId"], where: { clientId: { in: ids }, status: { not: "DONE" }, dueDate: { lt: startOfToday } }, _count: true }),

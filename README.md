@@ -42,7 +42,9 @@ Other commands: `npm test`, `npm run typecheck`, `npm run build`.
 | Client portal | `src/app/portal/` |
 | Two-level feature switches with change log | `src/lib/features/`, `src/app/app/settings/` |
 | GST invoicing (CGST/SGST vs IGST, financial-year numbering) | `src/lib/billing/gst.ts`, `src/app/app/invoices/` |
-| Notification outbox (WhatsApp, email, in-app) | `src/lib/notify.ts` |
+| Notification outbox and delivery (WhatsApp, in-app) | `src/lib/notify.ts`, `src/lib/whatsapp/` |
+| Scheduler: deadline alerts, review and invoice reminders, calendar roll-forward | `src/lib/jobs/`, `scripts/worker.ts`, `src/app/api/cron/` |
+| In-app inbox | `src/app/app/inbox/` |
 
 ## How the important parts work
 
@@ -52,12 +54,64 @@ Other commands: `npm test`, `npm run typecheck`, `npm run build`.
 
 **Compliance dates.** Rules are data in `src/lib/compliance/rules.ts`. They are seed values marked `verified: false`. **Have your CA confirm every due date, by state, before relying on them.** Generation is idempotent: each task has a unique `sourceKey`.
 
-**Notifications.** Everything is queued in the `Notification` table and delivered by `deliverPending()`. The `console` provider just logs. Nothing calls `deliverPending()` on a schedule yet (see below).
+## Scheduler and WhatsApp
+
+### What runs, and when
+
+| Job | Every | What it does |
+|---|---|---|
+| `calendar-rollover` | 6 h | Keeps each client's compliance calendar filled 3 months ahead (never duplicates). |
+| `compliance-alerts` | 1 h | Alerts the task owner 7, 3, 1 and 0 days before a deadline, then every 3 days while overdue. Overdue items also go to the admins. Sent to the inbox, and to WhatsApp if the person saved a number. Stops after 60 days overdue. |
+| `review-reminders` | 1 h | WhatsApps the client's primary contact when profiles have sat unreviewed past that client's reminder period (default 3 days). One message per requisition, not per profile. |
+| `invoice-reminders` | 1 h | WhatsApps the client once in the last 3 days before the due date, then weekly while overdue. |
+| `deliver` | 1 min | Sends everything queued. |
+
+Everything uses India time (IST). WhatsApp messages only go out between 09:00 and 20:00 IST; anything queued outside that waits for the morning.
+
+### Running it
+
+Pick one:
+
+```bash
+npm run worker                 # a long-running process; keep exactly one running
+```
+
+or call the endpoint every minute from any scheduler (cron, a hosting platform's cron, GitHub Actions):
+
+```bash
+curl -fsS -H "Authorization: Bearer $CRON_SECRET" https://your-app/api/cron
+```
+
+For development, `npm run jobs:run -- --force` runs every job once now. Running extra copies is harmless: each job takes a database lease and has a minimum interval. Settings shows a green "Running" badge while the `deliver` job has finished within the last 10 minutes, and red "Not running" otherwise.
+
+### How delivery behaves
+
+- **Reliable.** A message is claimed by exactly one worker. Temporary failures (rate limits, Meta outages, network) retry after 1 min, 5 min, 15 min, 1 h, 3 h, then stop as FAILED. Permanent ones (bad number, unapproved template) fail at once. Failures are counted on the Settings page.
+- **No repeats.** Each alert has a key (task, milestone, person), so hourly runs and catch-up after downtime never send the same reminder twice.
+- **Respects switches.** The "WhatsApp reminders" switch is checked when queuing and again when sending, so turning it off stops messages already waiting.
+- **STOP is honoured.** A reply of STOP, UNSUBSCRIBE or OPT OUT blocks that number and cancels anything waiting for it; START reverses it. The block list is shared across all consultancies on your WhatsApp number.
+- **Delivery receipts.** Sent, delivered, read and failed updates from Meta are applied in order, even when they arrive out of order.
+
+### Going live with WhatsApp
+
+Until you do this, `WHATSAPP_PROVIDER=console` just prints messages instead of sending them.
+
+1. In Meta Business Suite, set up a WhatsApp Business Account and add a sending number. Create a system user and a permanent access token.
+2. Set `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_APP_SECRET`, `WHATSAPP_VERIFY_TOKEN`, and check `WHATSAPP_API_VERSION` against Meta's current supported version.
+3. Run `npm run templates:print` and submit every template in WhatsApp Manager (category Utility, language English) with **exactly** the printed name and body. Approval can take from minutes to a couple of days. Messages using an unapproved template fail.
+4. In the Meta app dashboard, set the webhook URL to `https://your-app/api/whatsapp/webhook`, the verify token to your `WHATSAPP_VERIFY_TOKEN`, and subscribe to `messages`.
+5. Set `WHATSAPP_PROVIDER=cloud`, then send yourself a test: add your own number as a client contact or in the inbox, and run `npm run jobs:run -- --force`.
+
+If you change a template's wording or parameter order in `src/lib/whatsapp/templates.ts`, it must be re-approved in Meta.
+
+### Tests
+
+`npm test` runs fast unit tests. `npm run test:integration` runs the scheduler, delivery and webhook against a real Postgres (a separate `ccms_test` database, created automatically) and a local mock of Meta's API, so you can check retries, duplicate protection and signature handling without a WhatsApp account. **The Cloud API client has not been run against Meta's real servers**; the first real send is the real test.
 
 ## Not built yet (next steps)
 
-- **Scheduler.** A cron or queue that calls `deliverPending()`, sends compliance alerts (7, 3 and 1 day before due), profile-review reminders (`needsReviewReminder` already exists and is tested), invoice reminders, and rolls the compliance calendar forward each month.
-- **WhatsApp Business API.** Implement sending in `send()` in `src/lib/notify.ts`. Business-initiated messages need Meta-approved templates, so the template names in the code (`new_profile_submitted` and so on) need submitting.
+- **Email.** There is no email provider yet; email notifications are only logged.
+- **WhatsApp for employees and candidates** (document requests, interview confirmations) and **Kannada, Hindi and Tamil templates**. Only the five client and staff templates exist.
 - **Razorpay and UPI payment links** on invoices. `Invoice.paymentLinkUrl` is ready.
 - **File uploads.** Resumes are currently links, and JDs are pasted text. Add storage (S3 compatible) and PDF watermarking.
 - **Analytics and monthly branded report.** Data is there; no pages yet.

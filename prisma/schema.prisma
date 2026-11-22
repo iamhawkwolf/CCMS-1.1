@@ -79,7 +79,10 @@ enum NotificationChannel {
 
 enum NotificationStatus {
   PENDING
+  SENDING // claimed by a worker; reset to PENDING if the worker dies
   SENT
+  DELIVERED
+  READ
   FAILED
   SKIPPED
 }
@@ -459,24 +462,50 @@ model Payment {
   @@index([invoiceId])
 }
 
-// Outbox: everything the system wants to send goes here first, then a worker delivers it.
+// Outbox: everything the system wants to send goes here first, then the worker delivers it.
+// IN_APP rows double as the user's inbox (`to` is the user id).
 model Notification {
-  id            String              @id @default(cuid())
-  consultancyId String
-  clientId      String?
-  channel       NotificationChannel
-  to            String
-  template      String
-  payload       Json
-  status        NotificationStatus  @default(PENDING)
-  scheduledFor  DateTime            @default(now())
-  sentAt        DateTime?
-  error         String?
-  createdAt     DateTime            @default(now())
+  id                String              @id @default(cuid())
+  consultancyId     String
+  clientId          String?
+  channel           NotificationChannel
+  to                String
+  template          String
+  payload           Json
+  status            NotificationStatus  @default(PENDING)
+  scheduledFor      DateTime            @default(now())
+  sentAt            DateTime?
+  readAt            DateTime?
+  error             String?
+  attempts          Int                 @default(0)
+  claimedAt         DateTime?
+  providerMessageId String?             @unique
+  // Same key twice = same alert, so repeated job runs never double-send.
+  dedupeKey         String?             @unique
+  createdAt         DateTime            @default(now())
 
-  consultancy   Consultancy         @relation(fields: [consultancyId], references: [id], onDelete: Cascade)
+  consultancy       Consultancy         @relation(fields: [consultancyId], references: [id], onDelete: Cascade)
 
   @@index([status, scheduledFor])
+  @@index([channel, to, createdAt])
+}
+
+// People who replied STOP on WhatsApp. We never message these numbers (digits only, with country code).
+model WhatsAppOptOut {
+  phone     String   @id
+  reason    String?
+  createdAt DateTime @default(now())
+}
+
+// One row per scheduled job: last run, and a lease so two workers never run the same job at once.
+model JobState {
+  name           String    @id
+  lastStartedAt  DateTime?
+  lastFinishedAt DateTime?
+  lockedUntil    DateTime?
+  lastOk         Boolean?
+  lastSummary    Json?
+  lastError      String?
 }
 
 model AuditLog {

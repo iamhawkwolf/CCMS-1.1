@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { daysUntil } from "@/lib/time";
 
 export function PageHeader({ eyebrow, title, children }: { eyebrow?: string; title: ReactNode; children?: ReactNode }) {
   return (
@@ -78,12 +79,7 @@ export function fmtDate(d: Date | string | null | undefined): string {
   return new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric", timeZone: "UTC" });
 }
 
-export function daysFromNow(d: Date): number {
-  const today = new Date();
-  const a = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
-  const b = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
-  return Math.round((b - a) / 86400000);
-}
+export const daysFromNow = (d: Date): number => daysUntil(d, new Date());
 
 export function DueBadge({ due, done = false }: { due: Date; done?: boolean }) {
   if (done) return <Badge tone="mint">Done</Badge>;

@@ -6,15 +6,15 @@ import { db } from "@/lib/db";
 import { requireClientUser } from "@/lib/auth/context";
 import { isFeatureOn } from "@/lib/features/server";
 import { moveProfile } from "@/lib/services/requisition";
-import { queueNotification } from "@/lib/notify";
+import { queueSafely } from "@/lib/notify";
 import type { Stage } from "@/lib/requisition/stages";
 
 // Clients may shortlist, reject or ask for an interview. Offers and joining are the consultant's call.
 const CLIENT_STAGES: Stage[] = ["SHORTLISTED", "REJECTED", "INTERVIEW_SCHEDULED"];
 
-async function notifyTeam(consultancyId: string, plan: Parameters<typeof queueNotification>[0]["plan"], clientId: string, template: string, payload: Record<string, string | number | null>) {
+async function notifyTeam(consultancyId: string, plan: Parameters<typeof queueSafely>[0]["plan"], clientId: string, template: string, payload: Record<string, string | number | null>) {
   const team = await db.clientAssignment.findMany({ where: { clientId }, select: { userId: true } });
-  await Promise.all(team.map((t) => queueNotification({ consultancyId, plan, clientId, channel: "IN_APP", to: t.userId, template, payload })));
+  await Promise.all(team.map((t) => queueSafely({ consultancyId, plan, clientId, channel: "IN_APP", to: t.userId, template, payload })));
 }
 
 export async function raiseRequisition(form: FormData): Promise<void> {
