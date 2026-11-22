@@ -122,4 +122,15 @@ If you change a template's wording or parameter order in `src/lib/whatsapp/templ
 
 ## Design
 
-Dark glassmorphism with a Gen Z palette: electric violet, hot pink, cyan, mint and lime, with rose for danger. No orange. Tokens and components are in `src/app/globals.css`; light mode is available with `<html data-theme="light">`. Colour is never the only signal: every badge also carries a text label.
+A light, airy, frosted-glass look taken from a supplied design reference: a rounded app sheet on a cool-grey canvas, pill tabs across the top, soft translucent cards, light-weight type, thin KPI sparklines, and solid status pills.
+
+**The palette is the reference's and nothing else**, sampled from the image: blue `#458eec`, green `#28b642`, red `#f75757`, cool-grey surfaces, near-black ink `#060b0b`. All tokens are in `src/app/globals.css`. Meaning is fixed: blue is brand and information, green is good or done, red is overdue or error, grey is everything else (including "pending"). There is no orange, and no other hue.
+
+Two deliberate adjustments, both checked with a contrast and colour-blindness validator:
+
+- The bright reference hues are only 2.4 to 3:1 against these surfaces, so small text and chart marks use darker shades of the **same three hues** (`--blue-ink`, `--green-ink`, `--red-ink`, and the `-mark` variants). Fills such as pills, chips and buttons use the exact reference colours, with dark ink text on them because white fails contrast.
+- Green and red are almost indistinguishable to red-green colour-blind readers, so they are never the only signal: every green status has a ✓ and a label, every red one a ✕ and a label, and blue a dot. Chart colour is blue because green and red are reserved for good and bad.
+
+There is a single light theme; the reference has no dark variant. Charts (`src/components/charts.tsx`) have hover tooltips, a "view as table" fallback, and a whole-number axis. `npm test` covers the data bucketing behind them.
+
+To re-check that no stray colour crept in, a browser audit that reads every painted colour on every page lived in the scratch work for this change; the rule it enforced is simple: every colour must be a grey or a shade of blue, green or red.

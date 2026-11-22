@@ -16,8 +16,8 @@ export default async function NewInvoice({ searchParams }: { searchParams: Promi
   return (
     <>
       <PageHeader eyebrow="Billing" title="New GST invoice" />
-      {error && <p role="alert" className="badge b-rose mb-4" style={{ textTransform: "none" }}>{error}</p>}
-      {!consultancy.state && <div className="mb-4 max-w-3xl"><Notice tone="lime">Your business state is not set, so GST is split as CGST and SGST. Set it in Settings to charge IGST on out-of-state clients.</Notice></div>}
+      {error && <p role="alert" className="badge b-red mb-4" style={{ textTransform: "none" }}>{error}</p>}
+      {!consultancy.state && <div className="mb-4 max-w-3xl"><Notice tone="blue">Your business state is not set, so GST is split as CGST and SGST. Set it in Settings to charge IGST on out-of-state clients.</Notice></div>}
       <form action={createInvoice} className="max-w-3xl">
         <Card className="grid gap-4 sm:grid-cols-2">
           <Field label="Client"><select className="input" name="clientId" required>{clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></Field>

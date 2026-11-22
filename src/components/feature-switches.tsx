@@ -25,7 +25,7 @@ export function FeatureSwitches({ states, scope, overrides }: { states: FeatureS
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="font-semibold">{def.label}</span>
-                {locked ? <Badge tone="dim">Needs {def.minPlan.toLowerCase()} plan</Badge> : s.enabled ? <Badge tone="mint">On</Badge> : <Badge tone="dim">Off</Badge>}
+                {locked ? <Badge tone="dim">Needs {def.minPlan.toLowerCase()} plan</Badge> : s.enabled ? <Badge tone="green">On</Badge> : <Badge tone="dim">Off</Badge>}
                 {!locked && <span className="faint text-xs">{sourceLabel[s.source]}</span>}
               </div>
               <p className="dim text-sm">{def.description}</p>

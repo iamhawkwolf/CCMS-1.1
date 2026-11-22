@@ -31,7 +31,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
             <tbody>
               {tasks.map((t) => (
                 <tr key={t.id}>
-                  <td>{t.complianceKind && <Badge tone="violet">{t.complianceKind}</Badge>} <span className="ml-1">{t.title}</span></td>
+                  <td>{t.complianceKind && <Badge tone="dim">{t.complianceKind}</Badge>} <span className="ml-1">{t.title}</span></td>
                   <td><Link href={`/app/clients/${t.client.id}`} className="hover:underline">{t.client.name}</Link></td>
                   <td><div>{fmtDate(t.dueDate)}</div><DueBadge due={t.dueDate} done={t.status === "DONE"} /></td>
                   <td className="dim whitespace-nowrap">{t.assignee?.name ?? "Unassigned"}</td>

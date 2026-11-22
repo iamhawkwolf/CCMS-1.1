@@ -19,7 +19,7 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
       <PageHeader eyebrow="Clients" title="Client companies">
         {ctx.role === "ADMIN" && <ButtonLink href="/app/clients/new" primary>Add client</ButtonLink>}
       </PageHeader>
-      {error && <p role="alert" className="badge b-rose mb-4" style={{ textTransform: "none" }}>{error}</p>}
+      {error && <p role="alert" className="badge b-red mb-4" style={{ textTransform: "none" }}>{error}</p>}
       {limit !== null && <p className="faint mb-4 text-sm">{clients.length} of {limit} clients on your plan</p>}
       {clients.length === 0 ? (
         <Empty title="No clients yet" hint={ctx.role === "ADMIN" ? "Add your first client company." : "Ask your admin to assign clients to you."} />
@@ -33,11 +33,11 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
                   <td><Link href={`/app/clients/${c.id}`} className="font-semibold hover:underline">{c.name}</Link></td>
                   <td>{STATES[c.state] ?? c.state}</td>
                   <td className="flex flex-wrap gap-1">
-                    {c.pfNumber && <Badge tone="violet">PF</Badge>}
-                    {c.esiNumber && <Badge tone="pink">ESI</Badge>}
-                    {c.ptNumber && <Badge tone="cyan">PT</Badge>}
-                    {c.tan && <Badge tone="mint">TDS</Badge>}
-                    {c.lwfNumber && <Badge tone="lime">LWF</Badge>}
+                    {c.pfNumber && <Badge tone="dim">PF</Badge>}
+                    {c.esiNumber && <Badge tone="dim">ESI</Badge>}
+                    {c.ptNumber && <Badge tone="dim">PT</Badge>}
+                    {c.tan && <Badge tone="dim">TDS</Badge>}
+                    {c.lwfNumber && <Badge tone="dim">LWF</Badge>}
                   </td>
                   <td>{c._count.employees}</td>
                   <td>{c._count.requisitions}</td>

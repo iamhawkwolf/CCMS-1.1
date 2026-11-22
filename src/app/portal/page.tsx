@@ -20,7 +20,7 @@ export default async function PortalHome({ searchParams }: { searchParams: Promi
   return (
     <>
       <PageHeader eyebrow="Your hiring" title="Open roles and candidates" />
-      {error && <p role="alert" className="badge b-rose mb-4" style={{ textTransform: "none" }}>{error}</p>}
+      {error && <p role="alert" className="badge b-red mb-4" style={{ textTransform: "none" }}>{error}</p>}
       <div className="grid gap-5 lg:grid-cols-[2fr_1fr]">
         <div className="grid content-start gap-3">
           {reqs.length === 0 ? <Empty title="No requisitions yet" hint="Raise your first requirement on the right." /> : reqs.map((r) => {
@@ -29,7 +29,7 @@ export default async function PortalHome({ searchParams }: { searchParams: Promi
               <Link key={r.id} href={`/portal/requisitions/${r.id}`}>
                 <Card hover className="flex flex-wrap items-center justify-between gap-3">
                   <div><div className="h-section">{r.title}</div><div className="faint text-xs">{r.openings} opening{r.openings > 1 ? "s" : ""}{r.deadline ? ` · by ${fmtDate(r.deadline)}` : ""}</div></div>
-                  <div className="flex gap-2">{waiting > 0 && <Badge tone="pink">{waiting} to review</Badge>}<Badge tone="cyan">{r.profiles.length} profiles</Badge></div>
+                  <div className="flex gap-2">{waiting > 0 && <Badge tone="blue">{waiting} to review</Badge>}<Badge tone="blue">{r.profiles.length} profiles</Badge></div>
                 </Card>
               </Link>
             );

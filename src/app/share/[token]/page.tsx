@@ -31,7 +31,7 @@ export default async function SharedJd({ params }: { params: Promise<{ token: st
         <h1 className="h-display mt-1">{req.title}</h1>
         <div className="mt-6 whitespace-pre-wrap leading-relaxed">{link.jd.maskedText}</div>
         {tile && (
-          <div aria-hidden className="pointer-events-none absolute inset-0 grid -rotate-[24deg] scale-150 grid-cols-3 content-around gap-x-6 gap-y-14 overflow-hidden text-center text-sm font-bold" style={{ color: "var(--text)", opacity: 0.09 }}>
+          <div aria-hidden className="pointer-events-none absolute inset-0 grid -rotate-[24deg] scale-150 grid-cols-3 content-around gap-x-6 gap-y-14 overflow-hidden text-center text-sm font-bold" style={{ color: "var(--ink)", opacity: 0.09 }}>
             {tile}
           </div>
         )}

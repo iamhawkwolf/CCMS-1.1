@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   description: "Run every client company, compliance deadline, requisition and invoice from one place.",
 };
 
-export const viewport: Viewport = { themeColor: "#0a0618", width: "device-width", initialScale: 1 };
+export const viewport: Viewport = { themeColor: "#c0c6c9", width: "device-width", initialScale: 1 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

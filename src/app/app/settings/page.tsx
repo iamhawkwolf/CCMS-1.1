@@ -62,7 +62,7 @@ export default async function SettingsPage() {
                       <td>{fmtDate(l.changedAt)}</td>
                       <td>{names.get(l.changedById) ?? "Unknown"}</td>
                       <td>{l.key}{l.clientId ? <span className="faint"> (client)</span> : null}</td>
-                      <td>{l.oldValue === l.newValue ? <Badge tone="cyan">Reset to default</Badge> : <Badge tone={l.newValue ? "mint" : "dim"}>{l.newValue ? "Turned on" : "Turned off"}</Badge>}</td>
+                      <td>{l.oldValue === l.newValue ? <Badge tone="blue">Reset to default</Badge> : <Badge tone={l.newValue ? "green" : "dim"}>{l.newValue ? "Turned on" : "Turned off"}</Badge>}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -84,7 +84,7 @@ export default async function SettingsPage() {
           <Card>
             <div className="flex items-center justify-between gap-2">
               <h2 className="h-section">Automation</h2>
-              {running ? <Badge tone="mint">Running</Badge> : <Badge tone="rose">Not running</Badge>}
+              {running ? <Badge tone="green">Running</Badge> : <Badge tone="red">Not running</Badge>}
             </div>
             <p className="dim mb-3 mt-1 text-sm">{running ? "Reminders and alerts are being sent on schedule." : "The scheduler has not run in the last 10 minutes, so no reminders or alerts are going out."}</p>
             <ul className="grid gap-1.5 text-sm">
@@ -92,13 +92,13 @@ export default async function SettingsPage() {
                 <li key={j.name} className="flex items-center justify-between gap-2"><span className="dim">{j.name.replace(/-/g, " ")}</span><span className="faint text-xs">{j.lastFinishedAt ? `${j.lastOk ? "" : "failed · "}${fmtDate(j.lastFinishedAt)}` : "never run"}</span></li>
               ))}
             </ul>
-            {failed > 0 && <p className="mt-3 text-sm"><Badge tone="rose">{failed} WhatsApp message{failed === 1 ? "" : "s"} failed</Badge></p>}
+            {failed > 0 && <p className="mt-3 text-sm"><Badge tone="red">{failed} WhatsApp message{failed === 1 ? "" : "s"} failed</Badge></p>}
           </Card>
           <Card>
             <h2 className="h-section mb-3">Team</h2>
             <ul className="grid gap-2 text-sm">
               {team.map((u) => (
-                <li key={u.id} className="flex items-center justify-between gap-2"><span>{u.name}</span><Badge tone={u.role === "ADMIN" ? "violet" : "cyan"}>{u.role === "ADMIN" ? "Admin" : "Consultant"}</Badge></li>
+                <li key={u.id} className="flex items-center justify-between gap-2"><span>{u.name}</span><Badge tone={u.role === "ADMIN" ? "blue" : "dim"}>{u.role === "ADMIN" ? "Admin" : "Consultant"}</Badge></li>
               ))}
             </ul>
           </Card>

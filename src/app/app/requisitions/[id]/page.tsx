@@ -33,12 +33,12 @@ export default async function RequisitionPage({ params, searchParams }: { params
   return (
     <>
       <PageHeader eyebrow={req.client.name} title={req.title}>
-        <Badge tone={req.status === "OPEN" ? "mint" : "dim"}>{req.status.toLowerCase()}</Badge>
-        <Badge tone="violet">{req.openings} opening{req.openings > 1 ? "s" : ""}</Badge>
-        {req.deadline && <Badge tone="cyan">By {fmtDate(req.deadline)}</Badge>}
+        <Badge tone={req.status === "OPEN" ? "green" : "dim"}>{req.status.toLowerCase()}</Badge>
+        <Badge tone="blue">{req.openings} opening{req.openings > 1 ? "s" : ""}</Badge>
+        {req.deadline && <Badge tone="blue">By {fmtDate(req.deadline)}</Badge>}
       </PageHeader>
-      {error && <p role="alert" className="badge b-rose mb-4" style={{ textTransform: "none" }}>{error}</p>}
-      {notice && <div className="mb-4"><Notice tone="lime">{notice}</Notice></div>}
+      {error && <p role="alert" className="badge b-red mb-4" style={{ textTransform: "none" }}>{error}</p>}
+      {notice && <div className="mb-4"><Notice tone="blue">{notice}</Notice></div>}
 
       <div className="grid gap-5 xl:grid-cols-[2fr_1fr]">
         <div className="grid content-start gap-5">
@@ -102,7 +102,7 @@ export default async function RequisitionPage({ params, searchParams }: { params
             </p>
             {req.jds.map((jd) => (
               <div key={jd.id} className="glass-flat mb-3 p-3">
-                <div className="mb-2 flex items-center justify-between"><span className="faint text-xs">Added {fmtDate(jd.createdAt)}</span>{jd.approved ? <Badge tone="mint">Approved</Badge> : <Badge tone="lime">Review needed</Badge>}</div>
+                <div className="mb-2 flex items-center justify-between"><span className="faint text-xs">Added {fmtDate(jd.createdAt)}</span>{jd.approved ? <Badge tone="green">Approved</Badge> : <Badge tone="blue">Review needed</Badge>}</div>
                 <form action={approveAndShare.bind(null, id, jd.id)} className="grid gap-2">
                   <textarea className="input" name="maskedText" rows={7} defaultValue={jd.maskedText} aria-label="Masked JD text" />
                   <div className="flex flex-wrap items-center gap-2">
@@ -114,7 +114,7 @@ export default async function RequisitionPage({ params, searchParams }: { params
                   const live = !l.revokedAt && (!l.expiresAt || l.expiresAt > new Date());
                   return (
                     <div key={l.id} className="mt-3 border-t pt-3 text-xs" style={{ borderColor: "var(--glass-border)" }}>
-                      <div className="flex items-center justify-between gap-2"><Badge tone={live ? "mint" : "dim"}>{live ? "Live" : l.revokedAt ? "Revoked" : "Expired"}</Badge><span className="faint">{l._count.views} view{l._count.views === 1 ? "" : "s"}{l.views[0] ? ` · last ${fmtDate(l.views[0].viewedAt)}` : ""}</span></div>
+                      <div className="flex items-center justify-between gap-2"><Badge tone={live ? "green" : "dim"}>{live ? "Live" : l.revokedAt ? "Revoked" : "Expired"}</Badge><span className="faint">{l._count.views} view{l._count.views === 1 ? "" : "s"}{l.views[0] ? ` · last ${fmtDate(l.views[0].viewedAt)}` : ""}</span></div>
                       <code className="dim mt-2 block break-all">{`${base}/share/${l.token}`}</code>
                       {live && <form action={revokeLink.bind(null, id, l.id)} className="mt-2"><button className="btn btn-sm btn-danger" type="submit">Revoke</button></form>}
                     </div>

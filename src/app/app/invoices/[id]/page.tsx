@@ -19,10 +19,10 @@ export default async function InvoicePage({ params, searchParams }: { params: Pr
   return (
     <>
       <PageHeader eyebrow={inv.client.name} title={inv.number}>
-        <Badge tone={inv.status === "PAID" ? "mint" : inv.status === "DRAFT" ? "dim" : "cyan"}>{inv.status.replace("_", " ").toLowerCase()}</Badge>
+        <Badge tone={inv.status === "PAID" ? "green" : inv.status === "DRAFT" ? "dim" : "blue"}>{inv.status.replace("_", " ").toLowerCase()}</Badge>
         {inv.status === "DRAFT" && <form action={markSent.bind(null, id)}><button className="btn btn-sm btn-primary" type="submit">Mark as sent</button></form>}
       </PageHeader>
-      {error && <p role="alert" className="badge b-rose mb-4" style={{ textTransform: "none" }}>{error}</p>}
+      {error && <p role="alert" className="badge b-red mb-4" style={{ textTransform: "none" }}>{error}</p>}
       <div className="grid gap-5 xl:grid-cols-[2fr_1fr]">
         <Card>
           <div className="mb-4 flex flex-wrap justify-between gap-4 text-sm">

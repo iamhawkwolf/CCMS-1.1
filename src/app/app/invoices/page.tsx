@@ -7,7 +7,7 @@ import { Badge, ButtonLink, Card, DueBadge, Empty, PageHeader, Stat, fmtDate, ty
 
 export const metadata: Metadata = { title: "Invoices" };
 
-const tone: Record<string, Tone> = { DRAFT: "dim", SENT: "cyan", PARTIALLY_PAID: "lime", PAID: "mint", VOID: "dim" };
+const tone: Record<string, Tone> = { DRAFT: "dim", SENT: "blue", PARTIALLY_PAID: "blue", PAID: "green", VOID: "dim" };
 
 export default async function InvoicesPage() {
   const ctx = await requireStaff();
@@ -21,9 +21,9 @@ export default async function InvoicesPage() {
     <>
       <PageHeader eyebrow="Billing" title="Invoices"><ButtonLink href="/app/invoices/new" primary>New invoice</ButtonLink></PageHeader>
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
-        <Stat label="Outstanding" value={formatRupees(open.reduce((a, i) => a + balance(i), 0))} tone="cyan" />
-        <Stat label="Overdue" value={formatRupees(overdue.reduce((a, i) => a + balance(i), 0))} tone={overdue.length ? "rose" : "mint"} hint={`${overdue.length} invoice${overdue.length === 1 ? "" : "s"}`} />
-        <Stat label="Collected" value={formatRupees(invoices.reduce((a, i) => a + i.payments.reduce((b, p) => b + p.amountPaise, 0), 0))} tone="mint" />
+        <Stat label="Outstanding" value={formatRupees(open.reduce((a, i) => a + balance(i), 0))} tone="blue" />
+        <Stat label="Overdue" value={formatRupees(overdue.reduce((a, i) => a + balance(i), 0))} tone={overdue.length ? "red" : "green"} hint={`${overdue.length} invoice${overdue.length === 1 ? "" : "s"}`} />
+        <Stat label="Collected" value={formatRupees(invoices.reduce((a, i) => a + i.payments.reduce((b, p) => b + p.amountPaise, 0), 0))} tone="green" />
       </div>
       {invoices.length === 0 ? <Empty title="No invoices yet" hint="Create a GST invoice for a client's retainer, fixed fee, hourly or per-head work." /> : (
         <Card className="overflow-x-auto !p-2">

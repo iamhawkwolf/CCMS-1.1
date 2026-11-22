@@ -38,15 +38,15 @@ export default async function ClientPage({ params, searchParams }: { params: Pro
     <>
       <PageHeader eyebrow={STATES[client.state] ?? client.state} title={client.name}>
         <div className="flex flex-wrap gap-1.5">
-          {client.pfNumber && <Badge tone="violet">PF</Badge>}
-          {client.esiNumber && <Badge tone="pink">ESI</Badge>}
-          {client.ptNumber && <Badge tone="cyan">PT</Badge>}
-          {client.tan && <Badge tone="mint">TDS</Badge>}
-          {client.lwfNumber && <Badge tone="lime">LWF</Badge>}
+          {client.pfNumber && <Badge tone="dim">PF</Badge>}
+          {client.esiNumber && <Badge tone="dim">ESI</Badge>}
+          {client.ptNumber && <Badge tone="dim">PT</Badge>}
+          {client.tan && <Badge tone="dim">TDS</Badge>}
+          {client.lwfNumber && <Badge tone="dim">LWF</Badge>}
         </div>
       </PageHeader>
 
-      {error && <p role="alert" className="badge b-rose mb-4" style={{ textTransform: "none" }}>{error}</p>}
+      {error && <p role="alert" className="badge b-red mb-4" style={{ textTransform: "none" }}>{error}</p>}
       <div className="grid gap-5 xl:grid-cols-[3fr_2fr]">
         <div className="grid content-start gap-5">
           <Card>
@@ -62,7 +62,7 @@ export default async function ClientPage({ params, searchParams }: { params: Pro
                 <tbody>
                   {tasks.map((t) => (
                     <tr key={t.id}>
-                      <td>{t.complianceKind && <Badge tone="violet">{t.complianceKind}</Badge>} <span className="ml-1">{t.title}</span></td>
+                      <td>{t.complianceKind && <Badge tone="dim">{t.complianceKind}</Badge>} <span className="ml-1">{t.title}</span></td>
                       <td><div>{fmtDate(t.dueDate)}</div><DueBadge due={t.dueDate} /></td>
                       <td className="dim whitespace-nowrap">{t.assignee?.name ?? "Unassigned"}</td>
                       <td><form action={completeTask.bind(null, t.id)}><button className="btn btn-sm" type="submit">Mark done</button></form></td>

@@ -12,7 +12,7 @@ export default async function NewClientPage({ searchParams }: { searchParams: Pr
   return (
     <>
       <PageHeader eyebrow="Clients" title="Add a client company" />
-      {error && <p role="alert" className="badge b-rose mb-4" style={{ textTransform: "none" }}>{error}</p>}
+      {error && <p role="alert" className="badge b-red mb-4" style={{ textTransform: "none" }}>{error}</p>}
       <form action={createClient} className="grid max-w-3xl gap-5">
         <Card className="grid gap-4 sm:grid-cols-2">
           <Field label="Company name"><input className="input" name="name" required /></Field>
@@ -36,7 +36,7 @@ export default async function NewClientPage({ searchParams }: { searchParams: Pr
           <Field label="LWF number"><input className="input" name="lwfNumber" /></Field>
           <Field label="Notes"><input className="input" name="notes" /></Field>
         </Card>
-        <Notice tone="lime">Compliance dates come from seed rules that your CA should confirm before you rely on them.</Notice>
+        <Notice tone="blue">Compliance dates come from seed rules that your CA should confirm before you rely on them.</Notice>
         <div><button className="btn btn-primary" type="submit">Create client</button></div>
       </form>
     </>

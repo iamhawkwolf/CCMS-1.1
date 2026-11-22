@@ -1,20 +1,24 @@
 import { db } from "@/lib/db";
 import { requireClientUser } from "@/lib/auth/context";
+import { Logo } from "@/components/topnav";
 import { signOut } from "../actions-auth";
 
 export default async function PortalLayout({ children }: { children: React.ReactNode }) {
   const ctx = await requireClientUser();
   const client = await db.client.findUniqueOrThrow({ where: { id: ctx.clientId }, select: { name: true } });
   return (
-    <div className="mx-auto max-w-5xl p-4">
-      <header className="glass mb-6 flex items-center justify-between gap-3 px-5 py-3">
-        <div>
-          <span className="gradient-text text-xl font-extrabold">{ctx.consultancyName}</span>
-          <span className="faint ml-3 text-sm">for {client.name}</span>
+    <div className="frame">
+      <header className="mb-7 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <Logo />
+          <span className="leading-tight">
+            <span className="block font-semibold tracking-tight">{ctx.consultancyName}</span>
+            <span className="faint block text-xs">for {client.name}</span>
+          </span>
         </div>
         <form action={signOut}><button className="btn btn-sm" type="submit">Sign out</button></form>
       </header>
-      {children}
+      <div className="mx-auto max-w-5xl">{children}</div>
     </div>
   );
 }

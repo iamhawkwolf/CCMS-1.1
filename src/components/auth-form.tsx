@@ -16,13 +16,13 @@ export function AuthForm({ action, fields, submit, alt }: { action: (s: AuthStat
         </label>
       ))}
       {state?.error && (
-        <p role="alert" className="badge b-rose" style={{ borderRadius: 12, padding: ".6rem .8rem", textTransform: "none", fontSize: ".85rem" }}>
+        <p role="alert" className="badge b-red" style={{ borderRadius: 12, padding: ".6rem .8rem", fontSize: ".85rem" }}>
           {state.error}
         </p>
       )}
       <button className="btn btn-primary mt-1" type="submit" disabled={pending}>{pending ? "One moment…" : submit}</button>
       <p className="dim text-center text-sm">
-        {alt.text} <Link href={alt.href} className="gradient-text font-semibold">{alt.label}</Link>
+        {alt.text} <Link href={alt.href} className="accent font-semibold">{alt.label}</Link>
       </p>
     </form>
   );

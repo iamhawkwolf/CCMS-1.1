@@ -2,13 +2,17 @@ import { db } from "@/lib/db";
 import { requireStaff } from "@/lib/auth/context";
 import { FEATURES, planIncludes } from "@/lib/features/registry";
 import { resolveFeature, type SettingMap } from "@/lib/features/resolve";
-import { Sidebar, type NavItem } from "@/components/sidebar";
+import { TopNav, type NavItem } from "@/components/topnav";
 import { signOut } from "../actions-auth";
+
+const initialsOf = (name: string): string => name.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]!.toUpperCase()).join("") || "?";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const ctx = await requireStaff();
-  const unread = await db.notification.count({ where: { channel: "IN_APP", to: ctx.userId, readAt: null } });
-  const rows = await db.featureSetting.findMany({ where: { consultancyId: ctx.consultancyId }, select: { scope: true, key: true, enabled: true } });
+  const [unread, rows] = await Promise.all([
+    db.notification.count({ where: { channel: "IN_APP", to: ctx.userId, readAt: null } }),
+    db.featureSetting.findMany({ where: { consultancyId: ctx.consultancyId }, select: { scope: true, key: true, enabled: true } }),
+  ]);
   const account: SettingMap = {};
   for (const r of rows) if (r.scope === "ACCOUNT") (account as Record<string, boolean>)[r.key] = r.enabled;
 
@@ -21,19 +25,17 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   };
 
   const items: NavItem[] = [
-    { href: "/app", label: "Dashboard", icon: "◉" },
-    { href: "/app/clients", label: "Clients", icon: "◈" },
-    { href: "/app/tasks", label: "Tasks", icon: "✦" },
-    { href: "/app/inbox", label: "Inbox", icon: "✉", badge: unread },
-    ...(visible("requisition_tracker") ? [{ href: "/app/requisitions", label: "Requisitions", icon: "❖" }] : []),
-    ...(visible("invoicing") ? [{ href: "/app/invoices", label: "Invoices", icon: "₹" }] : []),
-    ...(ctx.role === "ADMIN" ? [{ href: "/app/settings", label: "Settings", icon: "⚙" }] : []),
+    { href: "/app", label: "Dashboard" },
+    { href: "/app/clients", label: "Clients" },
+    { href: "/app/tasks", label: "Tasks" },
+    ...(visible("requisition_tracker") ? [{ href: "/app/requisitions", label: "Requisitions" }] : []),
+    ...(visible("invoicing") ? [{ href: "/app/invoices", label: "Invoices" }] : []),
   ];
 
   return (
-    <div className="shell">
-      <Sidebar items={items} brand={ctx.consultancyName} user={`${ctx.name} · ${ctx.role === "ADMIN" ? "Admin" : "Consultant"}`} signOut={signOut} />
-      <main className="min-w-0 pb-10">{children}</main>
+    <div className="frame">
+      <TopNav items={items} brand={ctx.consultancyName} initials={initialsOf(ctx.name)} who={`${ctx.name} · ${ctx.role === "ADMIN" ? "Admin" : "Consultant"}`} unread={unread} showSettings={ctx.role === "ADMIN"} signOut={signOut} />
+      <main className="min-w-0">{children}</main>
     </div>
   );
 }

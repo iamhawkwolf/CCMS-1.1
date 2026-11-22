@@ -31,8 +31,8 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
           </div>
           <button className="btn btn-sm" type="submit">Save number</button>
         </form>
-        {error && <p role="alert" className="badge b-rose mt-3" style={{ textTransform: "none" }}>{error}</p>}
-        {saved && <p className="badge b-mint mt-3" style={{ textTransform: "none" }}>Saved</p>}
+        {error && <p role="alert" className="badge b-red mt-3" style={{ textTransform: "none" }}>{error}</p>}
+        {saved && <p className="badge b-green mt-3" style={{ textTransform: "none" }}>Saved</p>}
       </Card>
       {items.length === 0 ? <Empty title="Nothing here yet" hint="Deadline alerts and client activity show up here." /> : (
         <Card className="!p-2">
@@ -43,7 +43,7 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
                 <div className="flex items-start justify-between gap-4 px-4 py-3">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      {!n.readAt && <Badge tone="pink">New</Badge>}
+                      {!n.readAt && <Badge tone="blue">New</Badge>}
                       <span className="font-semibold">{v.title}</span>
                     </div>
                     {v.body && <p className="dim text-sm">{v.body}</p>}

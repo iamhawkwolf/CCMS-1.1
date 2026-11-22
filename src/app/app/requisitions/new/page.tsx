@@ -13,7 +13,7 @@ export default async function NewRequisition({ searchParams }: { searchParams: P
   return (
     <>
       <PageHeader eyebrow="Requisitions" title="Log a requisition" />
-      {error && <p role="alert" className="badge b-rose mb-4" style={{ textTransform: "none" }}>{error}</p>}
+      {error && <p role="alert" className="badge b-red mb-4" style={{ textTransform: "none" }}>{error}</p>}
       <form action={createRequisition} className="max-w-3xl">
         <Card className="grid gap-4 sm:grid-cols-2">
           <Field label="Client">

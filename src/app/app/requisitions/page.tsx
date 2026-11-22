@@ -32,9 +32,9 @@ export default async function RequisitionsPage({ searchParams }: { searchParams:
                   <tr key={r.id}>
                     <td><Link href={`/app/requisitions/${r.id}`} className="font-semibold hover:underline">{r.title}</Link><div className="faint text-xs">{r.openings} opening{r.openings > 1 ? "s" : ""}{r.deadline ? ` · by ${fmtDate(r.deadline)}` : ""}</div></td>
                     <td>{r.client.name}</td>
-                    <td><Badge tone={r.status === "OPEN" ? "mint" : r.status === "ON_HOLD" ? "lime" : "dim"}>{r.status === "ON_HOLD" ? "On hold" : r.status[0] + r.status.slice(1).toLowerCase()}</Badge></td>
+                    <td><Badge tone={r.status === "OPEN" ? "green" : r.status === "ON_HOLD" ? "blue" : "dim"}>{r.status === "ON_HOLD" ? "On hold" : r.status[0] + r.status.slice(1).toLowerCase()}</Badge></td>
                     <td>{r.profiles.length}</td>
-                    <td>{waiting ? <Badge tone="pink">{waiting} to review</Badge> : <span className="faint">-</span>}</td>
+                    <td>{waiting ? <Badge tone="blue">{waiting} to review</Badge> : <span className="faint">-</span>}</td>
                     <td className="dim">{-daysFromNow(r.createdAt)}d</td>
                   </tr>
                 );
