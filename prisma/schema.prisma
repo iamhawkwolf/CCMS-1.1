@@ -97,6 +97,8 @@ model Consultancy {
   plan             Plan     @default(STARTER)
   nextInvoiceNo    Int      @default(1)
   invoicePrefix    String   @default("INV")
+  // Demo accounts never send a real WhatsApp message or email, and are the only data the demo reset touches.
+  isDemo           Boolean  @default(false)
   createdAt        DateTime @default(now())
 
   users            User[]
