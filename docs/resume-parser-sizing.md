@@ -14,7 +14,7 @@ Code: `src/lib/resume/`. Endpoints: `POST /api/resumes/parse` (staff only, PDF o
 
 ## JD matching and match percentage
 
-Endpoint: `POST /api/resumes/match` (staff only). Upload up to 20 resumes plus either a `requisitionId` (uses that requisition's latest JD; consultants only reach clients assigned to them) or pasted `jdText`. Returns every resume with a **0 to 100 match**, a band (Strong 75+, Good 55+, Partial 35+, Weak), and the reasons, best first. Code: `src/lib/resume/match.ts`.
+Screen: **Requisitions > open one > Match resumes to JD** (`/app/requisitions/[id]/match`); it calls this endpoint and can submit a candidate straight into the profile tracker with the form pre-filled. Endpoint: `POST /api/resumes/match` (staff only). Upload up to 20 resumes plus either a `requisitionId` (uses that requisition's latest JD; consultants only reach clients assigned to them) or pasted `jdText`. Returns every resume with a **0 to 100 match**, a band (Strong 75+, Good 55+, Partial 35+, Weak), and the reasons, best first. Code: `src/lib/resume/match.ts`.
 
 **Layer 1, rules (always on).** The JD is read for must-have skills, good-to-have skills (half weight), years of experience asked, job title and degree. The score is a weighted blend of:
 
@@ -74,8 +74,9 @@ Do not run the model on the same small box as Postgres and the app: a model load
 ## Not built yet
 
 - Scanned-image resumes (OCR or an image-reading model; see the OCR sizing discussion: Tesseract fits on the app server).
-- The upload button and pre-filled form on the profile screen (the endpoint returns fields shaped like `ProfileInput`).
 - Storing the original file (storage layer in the roadmap) and the masked profile sheet.
 - A background queue for bulk imports; the endpoint is one resume per request.
-- Saving the match percentage on the profile (needs a database column) and a screen to upload resumes against a requisition and see the ranked list.
-- Rate limiting on the endpoints, and an audit log entry per parse or match (DPDP access logging).
+- Saving the match percentage on the profile (needs a database column), so results disappear when the page is left.
+- Spotting the same person uploaded twice in one batch (it ranks both).
+- Attaching the uploaded file to the profile (needs the storage layer); the form's resume link is still typed by hand.
+- Rate limiting on the endpoints. Matching writes an audit entry (`resume.match`); the plain parse endpoint does not yet.

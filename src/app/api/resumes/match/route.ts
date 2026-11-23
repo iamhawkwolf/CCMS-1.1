@@ -1,4 +1,5 @@
 import { clientScope, getCtx } from "@/lib/auth/context";
+import { audit } from "@/lib/audit";
 import { db } from "@/lib/db";
 import { configuredProvider, MAX_RESUME_BYTES, parseResume, ResumeFileError } from "@/lib/resume";
 import { rankResumes } from "@/lib/resume/match";
@@ -63,6 +64,7 @@ export async function POST(req: Request): Promise<Response> {
   }
 
   const ranked = await rankResumes(jdText.slice(0, MAX_JD_CHARS), readable.map((r) => ({ id: r.id, text: r.text })), { provider: configuredProvider(), jdTitle });
+  if (requisitionId) await audit(ctx.consultancyId, ctx.userId, "resume.match", "Requisition", requisitionId, { files: files.length });
   const byId = new Map(readable.map((r) => [r.id, r]));
   return Response.json({
     results: ranked.map(({ id, ...m }) => {

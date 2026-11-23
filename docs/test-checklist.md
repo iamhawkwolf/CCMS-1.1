@@ -85,3 +85,17 @@ Walk through each feature and tick it off. Each step says what to do and what yo
 - [ ] As the consultant, paste the URL of a client they are not assigned to: "not found".
 - [ ] As the client, paste a URL from another client's requisition: "not found".
 - [ ] As a client, open an `/app/...` address: sent to the portal.
+
+## 12. Resume matching
+Needs a requisition with a JD (section 6). Sample PDF and Word resumes work; use a few real ones too.
+- [ ] On a requisition, "Match resumes to JD" opens the match screen. Without a JD it says to add one first.
+- [ ] Choose or drop 3 or more resumes. The list shows names and sizes; Remove works.
+- [ ] A `.txt` or a file over 5 MB is skipped with a message.
+- [ ] "Rank" shows each resume with a percentage, a band (Strong, Good, Partial, Weak) and matched and missing skills, best first.
+- [ ] A resume clearly right for the JD ranks above one clearly wrong for it. Compare the order with your own judgement and note any resume you rank differently.
+- [ ] "How this score was made" lists each part. The numbers add up to what you would expect.
+- [ ] A scanned PDF shows under "Could not read" with a message; the other resumes are still ranked.
+- [ ] "Submit this candidate to the client" is pre-filled. Fix any wrong field, submit: the profile appears on the requisition. Submitting the same phone or email again is blocked as a duplicate.
+- [ ] As a consultant, open the match address of a client not assigned to you: "not found".
+- [ ] As the client user, open the match address: sent to the portal. A direct call to `/api/resumes/match` is refused.
+- [ ] The change log (Settings) shows a "resume.match" entry.

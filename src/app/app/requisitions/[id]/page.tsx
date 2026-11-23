@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { getClientFor, requireStaff } from "@/lib/auth/context";
 import { loadSettings } from "@/lib/features/server";
 import { resolveFeature } from "@/lib/features/resolve";
+import Link from "next/link";
 import { allowedNextStages, STAGE_LABEL } from "@/lib/requisition/stages";
 import { StageBadge } from "@/components/stage";
 import { Badge, Card, Empty, Field, Notice, PageHeader, fmtDate } from "@/components/ui";
@@ -36,6 +37,7 @@ export default async function RequisitionPage({ params, searchParams }: { params
         <Badge tone={req.status === "OPEN" ? "green" : "dim"}>{req.status.toLowerCase()}</Badge>
         <Badge tone="blue">{req.openings} opening{req.openings > 1 ? "s" : ""}</Badge>
         {req.deadline && <Badge tone="blue">By {fmtDate(req.deadline)}</Badge>}
+        <Link href={`/app/requisitions/${id}/match`} className="btn btn-sm btn-primary">Match resumes to JD</Link>
       </PageHeader>
       {error && <p role="alert" className="badge b-red mb-4" style={{ textTransform: "none" }}>{error}</p>}
       {notice && <div className="mb-4"><Notice tone="blue">{notice}</Notice></div>}
