@@ -2,7 +2,7 @@
 
 Walk through each feature and tick it off. Each step says what to do and what you should see. If something does not match, note the step number and tell me.
 
-**Demo logins** (password `demo12345` for all):
+**Demo logins.** On the sign-in page, click **Explore as Admin / Consultant / Client** (no password). Or type the email with password `demo12345` (local only; a hosted copy uses `DEMO_PASSWORD`). Run `npm run demo:reset` or use "Reset demo data" in the top banner to start fresh:
 
 | Login | Role | Should see |
 |---|---|---|
@@ -21,7 +21,9 @@ Walk through each feature and tick it off. Each step says what to do and what yo
 - [ ] Admin login lands on the Dashboard; the top bar has a Settings icon.
 - [ ] Consultant login has no Settings icon; opening `/app/settings` sends you back to the Dashboard.
 - [ ] Client login lands on the portal and cannot open `/app/clients` (sent back to the portal).
-- [ ] Sign up with a new email creates a new consultancy with no clients.
+- [ ] Sign up with a new email creates a new consultancy with no clients (local only). On a hosted copy `/signup` says "By invitation only".
+- [ ] The sign-in page shows the three "Explore as" buttons and each lands in the right place. Every page of the demo shows the blue "Demo account" banner; only the admin sees "Reset demo data".
+- [ ] After "Reset demo data" you stay signed in as admin and the dashboard shows fresh data.
 
 ## 2. Dashboard (admin)
 - [ ] Four numbers at the top: overdue tasks, due in 14 days, awaiting client, open requisitions.
@@ -85,3 +87,23 @@ Walk through each feature and tick it off. Each step says what to do and what yo
 - [ ] As the consultant, paste the URL of a client they are not assigned to: "not found".
 - [ ] As the client, paste a URL from another client's requisition: "not found".
 - [ ] As a client, open an `/app/...` address: sent to the portal.
+
+## 12. Resume matching
+Needs a requisition with a JD (section 6). Sample PDF and Word resumes work; use a few real ones too.
+- [ ] On a requisition, "Match resumes to JD" opens the match screen. Without a JD it says to add one first.
+- [ ] Choose or drop 3 or more resumes. The list shows names and sizes; Remove works.
+- [ ] A `.txt` or a file over 5 MB is skipped with a message.
+- [ ] "Rank" shows each resume with a percentage, a band (Strong, Good, Partial, Weak) and matched and missing skills, best first.
+- [ ] A resume clearly right for the JD ranks above one clearly wrong for it. Compare the order with your own judgement and note any resume you rank differently.
+- [ ] "How this score was made" lists each part. The numbers add up to what you would expect.
+- [ ] A scanned PDF shows under "Could not read" with a message; the other resumes are still ranked.
+- [ ] "Submit this candidate to the client" is pre-filled. Fix any wrong field, submit: the profile appears on the requisition. Submitting the same phone or email again is blocked as a duplicate.
+- [ ] As a consultant, open the match address of a client not assigned to you: "not found".
+- [ ] As the client user, open the match address: sent to the portal. A direct call to `/api/resumes/match` is refused.
+- [ ] The change log (Settings) shows a "resume.match" entry.
+- [ ] After submitting from the match screen, the profile on the requisition shows "Match NN%". "Why NN% match" opens the reasons.
+- [ ] A profile added with the manual "Submit a profile" form has no match badge.
+- [ ] Once at least one profile has a score, "Sort: Best match" appears and puts scored profiles first, highest first.
+- [ ] In the browser inspector, change the hidden `matchToken` value before submitting: the profile is still created but with no match score.
+- [ ] As the client, open the requisition in the portal: candidates show, but no match percentage anywhere.
+- [ ] A candidate with a fractional experience such as 3.9 years submits without a browser validation error.

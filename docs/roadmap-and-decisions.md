@@ -24,7 +24,7 @@ Choices made to fit that plan:
 | Resume masking default | Contact details hidden; "blind" mode as a per-client switch | A client wants stricter |
 
 ### Build order
-1. **Demo-ready:** demo consultancy with an `isDemo` flag that blocks all real messages, a reset-to-fresh-data command, invite-only signup, password reset.
+1. **Demo-ready (done 23 Nov, except password reset):** demo consultancy with an `isDemo` flag that blocks all real messages, one-click demo logins, a reset-to-fresh-data command and button, invite-only signup in production. Password reset is not built yet.
 2. **Resumes:** storage layer (our storage and client's own S3-compatible), upload, text reading, rule-based extraction, masking, review screen, blind profile sheet.
 3. **Finish V1:** staff profiles screen, time-tracking timers, monthly branded report and analytics, Razorpay and UPI payment links, interview scheduling page.
 4. **V2:** candidate database, onboarding and exit workflows, document vault (shares the storage layer), policy and handbook builder.
@@ -85,9 +85,9 @@ The consultant's corrections on the review screen are labelled examples; keep th
 
 ## 4. Planned: production checklist
 
-- [ ] **Demo account isolation.** The seed data uses phone numbers like 98000 00001 that could belong to real people. Once WhatsApp is live the scheduler would message them. Add an `isDemo` flag on the consultancy that blocks all real sending.
-- [ ] **Never run `npm run db:seed` on production** (public demo password). Add a separate demo setup that only touches the demo consultancy.
-- [ ] **Close open signup**; make accounts invite-only.
+- [x] **Demo account isolation.** Done: the demo consultancy is flagged `isDemo` and delivery never contacts anyone for it (tested).
+- [x] **Demo setup only touches the demo consultancy.** `npm run db:seed` is now the same as `npm run demo:reset`, and it never deletes anyone else's data. On a hosted copy set `DEMO_PASSWORD` or leave it unset (random).
+- [x] **Close open signup.** Signup is off in production unless `ALLOW_SIGNUP=1`. Still to build: a way for an admin to invite staff and client users by email, and a first real admin account (for now, set `ALLOW_SIGNUP=1` briefly).
 - [ ] Password reset and login rate limiting.
 - [ ] An email provider (email is only logged today).
 - [ ] Automated database backups, and a tested restore.
@@ -96,21 +96,38 @@ The consultant's corrections on the review screen are labelled examples; keep th
 - [ ] Privacy policy and terms; DPDP consent, retention and deletion design.
 - [ ] Choose the final server before onboarding clients who whitelist our IP for their storage.
 
-## 5. Deploying to Vercel with Neon (to look at it)
+## 5. Deploying the demo (Vercel + Neon), no clients yet
 
-For a private look, not for customers.
+For you and for demos to prospects. No real data, no real messages. Not yet tried on Vercel itself, so expect to fix a small thing or two on the first go.
 
-1. **Neon:** create a project; copy the pooled connection string (`-pooler` in the host) and the direct one.
-2. **Create tables and demo data**, from your computer, using the *direct* string:
+**Before you show it to a prospect:** Vercel's free (Hobby) plan is for non-commercial personal use ([fair use](https://vercel.com/docs/limits/fair-use-guidelines)). Looking at it yourself is fine; for client demos upgrade to Pro or use a small server.
+
+1. **Neon** (neon.com, free): create a project, choose the region nearest India that is offered. Open *Connect* and copy two strings: the **pooled** one (host contains `-pooler`) and the **direct** one.
+2. **Create the tables and the demo data**, once, from your computer (needs Node 20+; clone the repo, `npm install`):
    ```bash
    DATABASE_URL="<direct string>" npm run db:deploy
-   DATABASE_URL="<direct string>" npm run db:seed
-   DATABASE_URL="<direct string>" npm run jobs:run -- --force
+   DATABASE_URL="<direct string>" npm run demo:reset
    ```
-3. **Vercel:** import the GitHub repo, deploy branch `claude/sweet-wozniak-ui5oou`, and set `DATABASE_URL` (the *pooled* string plus `&pgbouncer=true`), `SESSION_SECRET` and `APP_URL`.
-4. Sign in as `admin@demo.test` / `demo12345`. Delete the project and database afterwards, because the demo password is public.
+   `db:deploy` creates the tables. `demo:reset` fills the demo consultancy. Re-run `db:deploy` whenever a new version adds a migration.
+3. **Vercel** (vercel.com): *Add New, Project*, import the GitHub repo, set the **Production Branch** to `claude/optimistic-babbage-kaixzv` (or the branch you merge to). Leave the build settings alone (`npm run build` already runs `prisma generate`). Add these environment variables:
 
-Not yet tested on Vercel. Neon free plan (checked Nov 2026): 1 GB storage and 100 compute-hours per project per month ([source](https://neon.com/faqs/free-plan-limits-and-quotas)). Calling `/api/cron` every minute keeps the database awake all day and could use up the compute hours, so on the free plan call it every 10 to 15 minutes or only in business hours.
+   | Name | Value |
+   |---|---|
+   | `DATABASE_URL` | the **pooled** string with `&pgbouncer=true` added at the end |
+   | `SESSION_SECRET` | output of `openssl rand -base64 32` |
+   | `APP_URL` | your site's address, e.g. `https://ccms-demo.vercel.app` (set it after the first deploy, then redeploy) |
+   | `DEMO_MODE` | `1` |
+   | `DEMO_PASSWORD` | optional; skip it and the typed-password login is unguessable, the buttons still work |
+
+   Do **not** set `ALLOW_SIGNUP`, `WHATSAPP_PROVIDER` or `CRON_SECRET`. Signup stays closed, nothing is sent, and no scheduler is needed (the demo reset runs the reminder jobs once, so the inbox already has alerts).
+4. Deploy, open the address, and click **Explore as Admin**. That is your **testing login** for demos: share the address and tell people to click an "Explore as" button. Use **Reset demo data** (top banner) before each demo.
+5. **Check it:** walk through `docs/test-checklist.md` against the hosted copy.
+
+Neon free plan (checked Nov 2026): 1 GB storage and 100 compute-hours per project per month ([source](https://neon.com/faqs/free-plan-limits-and-quotas)). The first click after a quiet spell is slower while the database wakes. For a demo this is fine.
+
+If the first click fails with a timeout, run `DATABASE_URL="<direct string>" npm run demo:reset` again from your computer.
+
+**Later, with a client:** follow section 4 and move to a proper server (section 6). Nothing in the app is tied to Vercel or Neon.
 
 Alternatives: Supabase (free database 500 MB, pauses after a week idle; Pro $25 a month includes 100 GB of file storage) ([pricing](https://supabase.com/pricing)); Vercel Blob (about 1 GB free) ([pricing](https://vercel.com/docs/vercel-blob/usage-and-pricing)).
 

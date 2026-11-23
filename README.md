@@ -2,6 +2,8 @@
 
 One login for an Indian HR consultancy to run every client company: compliance calendar, requisition and profile tracker, JD protection, client portal and GST invoicing.
 
+Resume reading (PDF/Word to profile fields) and the server it needs: [`docs/resume-parser-sizing.md`](docs/resume-parser-sizing.md).
+
 The product plan is in [`docs/features-and-workflows.md`](docs/features-and-workflows.md). Decisions, open questions, the resume-handling design, the production checklist and deployment notes are in [`docs/roadmap-and-decisions.md`](docs/roadmap-and-decisions.md). A click-through test script for every feature is in [`docs/test-checklist.md`](docs/test-checklist.md). This repo is the V1 scaffold of the plan.
 
 ## Stack
@@ -15,19 +17,19 @@ cp .env.example .env          # then set SESSION_SECRET (openssl rand -base64 32
 docker compose up -d          # Postgres on :5432
 npm install
 npm run db:migrate            # applies prisma/migrations
-npm run db:seed               # demo data
+npm run demo:reset            # demo data (also what `npm run db:seed` does)
 npm run dev                   # http://localhost:3000
 ```
 
-Demo logins (password `demo12345`, seed data only):
+## Demo account
 
-| Login | Role | Sees |
-|---|---|---|
-| `admin@demo.test` | Admin | All clients, settings, feature switches |
-| `consultant@demo.test` | Consultant | Only clients assigned to them |
-| `client@demo.test` | Client user | The client portal for Acme Textiles |
+The sign-in page has three buttons, **Explore as Admin / Consultant / Client**: one click, no password, pre-filled data (4 clients, 60 tasks, 5 requisitions with 14 candidates in every stage, 5 invoices in every state, a JD share link, inbox alerts). They sign in to a separate demo consultancy only. The buttons show when `DEMO_MODE=1` (always on in development, opt-in in production).
 
-The demo JD share link is `/share/demo-share-link-token`.
+- **Nothing is ever sent.** The demo consultancy is flagged `isDemo`, and delivery marks its WhatsApp and email as sent without contacting anyone, so the made-up phone numbers are safe even when real WhatsApp is live for other accounts. Covered by `tests/integration/demo.test.ts`.
+- **Reset.** The demo admin has a **Reset demo data** button in the banner at the top. From a terminal: `npm run demo:reset`. Both delete and rebuild only the demo consultancy, never anyone else's data, so they are safe on a database that holds real accounts. Dates are relative to today, so it always looks current.
+- **Passwords.** The accounts are `admin@demo.test`, `consultant@demo.test`, `client@demo.test` (and `karan@demo.test`, a second consultant). The password is `DEMO_PASSWORD`, which defaults to `demo12345` locally and to a random one in production, so the public default never works on a hosted copy.
+- **Sign-up** is open in development and closed in production (invite-only) unless `ALLOW_SIGNUP=1`.
+- The demo JD share link is `/share/demo-share-link-token`. To see duplicate detection, submit a profile with phone `9845012345` on the Senior Accountant requisition.
 
 Other commands: `npm test`, `npm run typecheck`, `npm run build`.
 

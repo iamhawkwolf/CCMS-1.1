@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { createSession, destroySession } from "@/lib/auth/session";
+import { signupOpen } from "@/lib/demo/mode";
 import type { AuthState } from "@/components/auth-form";
 
 const loginSchema = z.object({ email: z.string().trim().toLowerCase().pipe(z.email()), password: z.string().min(1) });
@@ -27,6 +28,7 @@ export async function login(_: AuthState, form: FormData): Promise<AuthState> {
 }
 
 export async function signup(_: AuthState, form: FormData): Promise<AuthState> {
+  if (!signupOpen()) return { error: "Sign-up is by invitation only" };
   const keep = { consultancy: String(form.get("consultancy") ?? ""), name: String(form.get("name") ?? ""), email: String(form.get("email") ?? "") };
   const parsed = signupSchema.safeParse(Object.fromEntries(form));
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Check the form and try again", values: keep };

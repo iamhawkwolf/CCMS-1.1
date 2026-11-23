@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { requireClientUser } from "@/lib/auth/context";
 import { Logo } from "@/components/topnav";
+import { DemoBanner } from "@/components/demo-banner";
 import { signOut } from "../actions-auth";
 
 export default async function PortalLayout({ children }: { children: React.ReactNode }) {
@@ -8,6 +9,7 @@ export default async function PortalLayout({ children }: { children: React.React
   const client = await db.client.findUniqueOrThrow({ where: { id: ctx.clientId }, select: { name: true } });
   return (
     <div className="frame">
+      {ctx.isDemo && <DemoBanner canReset={false} />}
       <header className="mb-7 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <Logo />

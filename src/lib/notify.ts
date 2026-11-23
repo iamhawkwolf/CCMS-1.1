@@ -105,25 +105,27 @@ export async function deliverPending(opts: { now?: Date; limit?: number; fetchIm
   }
   summary.claimed = claimed.length;
 
-  const planCache = new Map<string, Plan>();
+  const consultancyCache = new Map<string, { plan: Plan; isDemo: boolean }>();
+  const consultancyOf = async (id: string) => {
+    let c = consultancyCache.get(id);
+    if (!c) {
+      c = await db.consultancy.findUniqueOrThrow({ where: { id }, select: { plan: true, isDemo: true } });
+      consultancyCache.set(id, c);
+    }
+    return c;
+  };
   const featureCache = new Map<string, boolean>();
   const whatsappOn = async (row: Row): Promise<boolean> => {
     if (!row.clientId) return true;
     const key = `${row.consultancyId}:${row.clientId}`;
-    if (!featureCache.has(key)) {
-      let plan = planCache.get(row.consultancyId);
-      if (!plan) {
-        plan = (await db.consultancy.findUniqueOrThrow({ where: { id: row.consultancyId }, select: { plan: true } })).plan;
-        planCache.set(row.consultancyId, plan);
-      }
-      featureCache.set(key, await isFeatureOn("whatsapp_reminders", row.consultancyId, plan, row.clientId));
-    }
+    if (!featureCache.has(key)) featureCache.set(key, await isFeatureOn("whatsapp_reminders", row.consultancyId, (await consultancyOf(row.consultancyId)).plan, row.clientId));
     return featureCache.get(key)!;
   };
+  const ctx: DeliveryCtx = { whatsappOn, isDemo: async (row) => (await consultancyOf(row.consultancyId)).isDemo };
 
   const queue = [...claimed];
   const workers = Array.from({ length: Math.min(5, queue.length) }, async () => {
-    for (let row = queue.shift(); row; row = queue.shift()) await deliverOne(row, now, summary, whatsappOn, opts.fetchImpl);
+    for (let row = queue.shift(); row; row = queue.shift()) await deliverOne(row, now, summary, ctx, opts.fetchImpl);
   });
   await Promise.all(workers);
   return summary;
@@ -133,10 +135,20 @@ async function finish(id: string, data: Prisma.NotificationUpdateInput): Promise
   await db.notification.update({ where: { id }, data: { claimedAt: null, ...data } });
 }
 
-async function deliverOne(row: Row, now: Date, s: DeliverySummary, whatsappOn: (r: Row) => Promise<boolean>, fetchImpl?: typeof fetch): Promise<void> {
+interface DeliveryCtx { whatsappOn: (r: Row) => Promise<boolean>; isDemo: (r: Row) => Promise<boolean> }
+
+async function deliverOne(row: Row, now: Date, s: DeliverySummary, { whatsappOn, isDemo }: DeliveryCtx, fetchImpl?: typeof fetch): Promise<void> {
   try {
     if (row.channel === "IN_APP") {
       await finish(row.id, { status: "SENT", sentAt: now, attempts: { increment: 1 } });
+      s.sent++;
+      return;
+    }
+
+    // A demo consultancy has made-up phone numbers that could belong to real people: nothing ever leaves the system.
+    if (await isDemo(row)) {
+      console.log(`[demo] not sent (demo account): ${row.channel} to=${row.to} ${row.template}`);
+      await finish(row.id, { status: "SENT", sentAt: now, attempts: { increment: 1 }, providerMessageId: row.channel === "WHATSAPP" ? `demo-${row.id}` : null });
       s.sent++;
       return;
     }

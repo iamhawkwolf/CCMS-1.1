@@ -3,7 +3,11 @@ import { requireStaff } from "@/lib/auth/context";
 import { FEATURES, planIncludes } from "@/lib/features/registry";
 import { resolveFeature, type SettingMap } from "@/lib/features/resolve";
 import { TopNav, type NavItem } from "@/components/topnav";
+import { DemoBanner } from "@/components/demo-banner";
 import { signOut } from "../actions-auth";
+
+// "Reset demo data" runs from this layout and needs more than the default serverless time limit.
+export const maxDuration = 60;
 
 const initialsOf = (name: string): string => name.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]!.toUpperCase()).join("") || "?";
 
@@ -34,6 +38,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="frame">
+      {ctx.isDemo && <DemoBanner canReset={ctx.role === "ADMIN"} />}
       <TopNav items={items} brand={ctx.consultancyName} initials={initialsOf(ctx.name)} who={`${ctx.name} · ${ctx.role === "ADMIN" ? "Admin" : "Consultant"}`} unread={unread} showSettings={ctx.role === "ADMIN"} signOut={signOut} />
       <main className="min-w-0">{children}</main>
     </div>
