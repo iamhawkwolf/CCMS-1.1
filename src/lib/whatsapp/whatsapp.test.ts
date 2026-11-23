@@ -47,7 +47,7 @@ describe("cloud API", () => {
       recipient_type: "individual",
       to: "919876543210",
       type: "template",
-      template: { name: "ccms_new_profile_submitted", language: { code: "en" }, components: [{ type: "body", parameters: [{ type: "text", text: "A" }, { type: "text", text: "B" }, { type: "text", text: "C" }] }] },
+      template: { name: "banyanroot_new_profile_submitted", language: { code: "en" }, components: [{ type: "body", parameters: [{ type: "text", text: "A" }, { type: "text", text: "B" }, { type: "text", text: "C" }] }] },
     });
   });
   it("needs both token and phone number id", () => {

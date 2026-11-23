@@ -99,7 +99,7 @@ describe("delivery through the WhatsApp Cloud API", () => {
     expect(meta.requests).toHaveLength(1);
     expect(meta.requests[0]!.url).toBe("/v23.0/555000/messages");
     expect(meta.requests[0]!.auth).toBe("Bearer test-token");
-    expect(meta.requests[0]!.body).toMatchObject({ to: "919800000012", type: "template", template: { name: "ccms_new_profile_submitted", language: { code: "en" } } });
+    expect(meta.requests[0]!.body).toMatchObject({ to: "919800000012", type: "template", template: { name: "banyanroot_new_profile_submitted", language: { code: "en" } } });
     expect(await db.notification.findFirstOrThrow()).toMatchObject({ status: "SENT", providerMessageId: "wamid.MOCK1", attempts: 1 });
   });
   it("retries a throttled message later, then succeeds", async () => {
