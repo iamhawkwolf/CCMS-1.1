@@ -1,4 +1,4 @@
-# CCMS: HR consultancy platform (V1)
+# Banyanroot: HR consultancy platform (V1)
 
 One login for an Indian HR consultancy to run every client company: compliance calendar, requisition and profile tracker, JD protection, client portal and GST invoicing.
 
@@ -106,7 +106,7 @@ If you change a template's wording or parameter order in `src/lib/whatsapp/templ
 
 ### Tests
 
-`npm test` runs fast unit tests. `npm run test:integration` runs the scheduler, delivery and webhook against a real Postgres (a separate `ccms_test` database, created automatically) and a local mock of Meta's API, so you can check retries, duplicate protection and signature handling without a WhatsApp account. **The Cloud API client has not been run against Meta's real servers**; the first real send is the real test.
+`npm test` runs fast unit tests. `npm run test:integration` runs the scheduler, delivery and webhook against a real Postgres (a separate `banyanroot_test` database, created automatically) and a local mock of Meta's API, so you can check retries, duplicate protection and signature handling without a WhatsApp account. **The Cloud API client has not been run against Meta's real servers**; the first real send is the real test.
 
 ## Not built yet (next steps)
 

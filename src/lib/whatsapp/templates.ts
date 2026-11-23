@@ -17,7 +17,7 @@ export interface TemplateDef {
 
 export const TEMPLATES = {
   new_profile_submitted: {
-    metaName: "ccms_new_profile_submitted",
+    metaName: "banyanroot_new_profile_submitted",
     body: "Hello from {{1}}: a new candidate profile, {{2}}, has been submitted for your {{3}} requisition. Please review it in your client portal.",
     params: [
       { key: "consultancy", example: "Acme HR Advisors" },
@@ -26,7 +26,7 @@ export const TEMPLATES = {
     ],
   },
   profile_review_reminder: {
-    metaName: "ccms_profile_review_reminder",
+    metaName: "banyanroot_profile_review_reminder",
     body: "Reminder from {{1}}: {{2}} candidate profile(s) for {{3}} are waiting for your review. Please shortlist or reject them in your client portal.",
     params: [
       { key: "consultancy", example: "Acme HR Advisors" },
@@ -35,7 +35,7 @@ export const TEMPLATES = {
     ],
   },
   invoice_reminder: {
-    metaName: "ccms_invoice_reminder",
+    metaName: "banyanroot_invoice_reminder",
     body: "Hello from {{1}}: invoice {{2}} for {{3}} is due on {{4}}. Please arrange payment at your earliest convenience.",
     params: [
       { key: "consultancy", example: "Acme HR Advisors" },
@@ -45,7 +45,7 @@ export const TEMPLATES = {
     ],
   },
   invoice_overdue: {
-    metaName: "ccms_invoice_overdue",
+    metaName: "banyanroot_invoice_overdue",
     body: "Hello from {{1}}: invoice {{2}} for {{3}} was due on {{4}} and is now overdue. Please arrange payment or reply to this message if you have already paid.",
     params: [
       { key: "consultancy", example: "Acme HR Advisors" },
@@ -55,7 +55,7 @@ export const TEMPLATES = {
     ],
   },
   compliance_alert: {
-    metaName: "ccms_compliance_alert",
+    metaName: "banyanroot_compliance_alert",
     body: "{{1}} reminder: {{2}} for {{3}} is due on {{4}} ({{5}}).",
     params: [
       { key: "consultancy", example: "Acme HR Advisors" },

@@ -4,7 +4,7 @@ import path from "node:path";
 try { process.loadEnvFile(".env"); } catch { /* no .env */ }
 
 // Integration tests run against a separate database so they never touch dev or demo data.
-const base = new URL(process.env.DATABASE_URL ?? "postgresql://ccms:ccms@localhost:5432/ccms?schema=public");
+const base = new URL(process.env.DATABASE_URL ?? "postgresql://banyanroot:banyanroot@localhost:5432/banyanroot?schema=public");
 const testUrl = new URL(base);
 testUrl.pathname = `/${base.pathname.slice(1).replace(/_test$/, "")}_test`;
 process.env.TEST_DATABASE_URL = process.env.TEST_DATABASE_URL ?? testUrl.toString();

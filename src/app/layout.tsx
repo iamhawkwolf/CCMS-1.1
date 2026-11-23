@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: { default: "CCMS: HR consultancy, one login", template: "%s · CCMS" },
+  title: { default: "Banyanroot: HR consultancy, one login", template: "%s · Banyanroot" },
   description: "Run every client company, compliance deadline, requisition and invoice from one place.",
 };
 
