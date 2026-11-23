@@ -11,6 +11,8 @@ export interface Ctx {
   consultancyId: string;
   consultancyName: string;
   plan: Plan;
+  /** True for the demo consultancy: sample data, and nothing is ever sent. */
+  isDemo: boolean;
   /** Only set for CLIENT_USER. */
   clientId: string | null;
 }
@@ -28,6 +30,7 @@ export async function getCtx(): Promise<Ctx | null> {
     consultancyId: u.consultancyId,
     consultancyName: u.consultancy.name,
     plan: u.consultancy.plan,
+    isDemo: u.consultancy.isDemo,
     clientId: u.clientId,
   };
 }

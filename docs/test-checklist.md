@@ -2,7 +2,7 @@
 
 Walk through each feature and tick it off. Each step says what to do and what you should see. If something does not match, note the step number and tell me.
 
-**Demo logins** (password `demo12345` for all):
+**Demo logins.** On the sign-in page, click **Explore as Admin / Consultant / Client** (no password). Or type the email with password `demo12345` (local only; a hosted copy uses `DEMO_PASSWORD`). Run `npm run demo:reset` or use "Reset demo data" in the top banner to start fresh:
 
 | Login | Role | Should see |
 |---|---|---|
@@ -21,7 +21,9 @@ Walk through each feature and tick it off. Each step says what to do and what yo
 - [ ] Admin login lands on the Dashboard; the top bar has a Settings icon.
 - [ ] Consultant login has no Settings icon; opening `/app/settings` sends you back to the Dashboard.
 - [ ] Client login lands on the portal and cannot open `/app/clients` (sent back to the portal).
-- [ ] Sign up with a new email creates a new consultancy with no clients.
+- [ ] Sign up with a new email creates a new consultancy with no clients (local only). On a hosted copy `/signup` says "By invitation only".
+- [ ] The sign-in page shows the three "Explore as" buttons and each lands in the right place. Every page of the demo shows the blue "Demo account" banner; only the admin sees "Reset demo data".
+- [ ] After "Reset demo data" you stay signed in as admin and the dashboard shows fresh data.
 
 ## 2. Dashboard (admin)
 - [ ] Four numbers at the top: overdue tasks, due in 14 days, awaiting client, open requisitions.

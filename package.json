@@ -12,7 +12,8 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
-    "db:seed": "tsx prisma/seed.ts",
+    "db:seed": "tsx scripts/demo-reset.ts",
+    "demo:reset": "tsx scripts/demo-reset.ts",
     "db:reset": "prisma migrate reset --force",
     "worker": "tsx scripts/worker.ts",
     "jobs:run": "tsx scripts/run-jobs.ts",
@@ -40,6 +41,6 @@
     "vitest": "^3.2.4"
   },
   "prisma": {
-    "seed": "tsx prisma/seed.ts"
+    "seed": "tsx scripts/demo-reset.ts"
   }
 }
