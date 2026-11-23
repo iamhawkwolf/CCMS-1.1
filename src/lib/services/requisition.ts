@@ -1,8 +1,9 @@
 import { randomBytes } from "node:crypto";
-import type { Plan } from "@prisma/client";
+import type { Plan, Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { isFeatureOn } from "@/lib/features/server";
 import { maskContactDetails } from "@/lib/jd/mask";
+import type { SavedMatch } from "@/lib/resume/token";
 import { queueSafely } from "@/lib/notify";
 import { canMove, emailKey, phoneKey, type Stage, STAGE_LABEL } from "@/lib/requisition/stages";
 
@@ -16,6 +17,8 @@ export interface ProfileInput {
   expectedCtc?: number | null;
   noticeDays?: number | null;
   resumeUrl?: string | null;
+  /** Verified match result, when the profile came from the match screen. */
+  match?: SavedMatch | null;
 }
 
 export type AddProfileResult =
@@ -54,6 +57,7 @@ export async function addProfile(req: { id: string; clientId: string; consultanc
       expectedCtc: input.expectedCtc,
       noticeDays: input.noticeDays,
       resumeUrl: input.resumeUrl,
+      ...(input.match ? { matchScore: input.match.score, matchMethod: input.match.method, matchedAt: new Date(), matchDetail: input.match.detail as unknown as Prisma.InputJsonValue } : {}),
       events: { create: { toStage: "SUBMITTED", actorId, comment: "Profile submitted" } },
     },
   });

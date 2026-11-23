@@ -323,6 +323,12 @@ model Profile {
   expectedCtc      Int?
   noticeDays       Int?
   resumeUrl        String?
+  // Resume-to-JD match, set when the profile is submitted from the match screen. Null for profiles added by hand.
+  // Internal to the consultancy: never shown in the client portal.
+  matchScore       Int?
+  matchMethod      String? // "rules" | "ollama" | "claude"
+  matchedAt        DateTime?
+  matchDetail      Json? // band, breakdown, matched and missing skills, summary, warnings. No contact details.
   stage            ProfileStage @default(SUBMITTED)
   clientComment    String?
   submittedAt      DateTime     @default(now())
