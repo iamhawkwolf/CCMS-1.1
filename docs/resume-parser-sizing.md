@@ -16,6 +16,8 @@ Code: `src/lib/resume/`. Endpoints: `POST /api/resumes/parse` (staff only, PDF o
 
 Screen: **Requisitions > open one > Match resumes to JD** (`/app/requisitions/[id]/match`); it calls this endpoint and can submit a candidate straight into the profile tracker with the form pre-filled. Endpoint: `POST /api/resumes/match` (staff only). Upload up to 20 resumes plus either a `requisitionId` (uses that requisition's latest JD; consultants only reach clients assigned to them) or pasted `jdText`. Returns every resume with a **0 to 100 match**, a band (Strong 75+, Good 55+, Partial 35+, Weak), and the reasons, best first. Code: `src/lib/resume/match.ts`.
 
+**Saved on the profile.** Submitting a candidate from the match screen stores the score, how it was scored (rules, ollama or claude), when, and the reasons (band, breakdown, matched and missing skills, summary) on the profile. No phone, email or resume text is stored in that detail. The score travels from the screen to the form as a signed value, so a typed or edited number is ignored and the profile is still created without a score; the signature is tied to that requisition and expires after 24 hours. Scores are internal: the requisition page shows them to staff (with a "Best match" sort), and the client portal never does.
+
 **Layer 1, rules (always on).** The JD is read for must-have skills, good-to-have skills (half weight), years of experience asked, job title and degree. The score is a weighted blend of:
 
 | Part | Weight | What it checks |
@@ -76,7 +78,8 @@ Do not run the model on the same small box as Postgres and the app: a model load
 - Scanned-image resumes (OCR or an image-reading model; see the OCR sizing discussion: Tesseract fits on the app server).
 - Storing the original file (storage layer in the roadmap) and the masked profile sheet.
 - A background queue for bulk imports; the endpoint is one resume per request.
-- Saving the match percentage on the profile (needs a database column), so results disappear when the page is left.
+- Saving the match for resumes that are *not* submitted: only a candidate you submit keeps the score, so ranked-but-skipped resumes disappear when you leave the screen (deliberate: it avoids keeping personal data for people you never submit).
+- Re-scoring a saved profile when the JD changes. The saved score is from the JD at the time it was submitted.
 - Spotting the same person uploaded twice in one batch (it ranks both).
 - Attaching the uploaded file to the profile (needs the storage layer); the form's resume link is still typed by hand.
 - Rate limiting on the endpoints. Matching writes an audit entry (`resume.match`); the plain parse endpoint does not yet.

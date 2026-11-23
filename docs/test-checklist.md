@@ -99,3 +99,9 @@ Needs a requisition with a JD (section 6). Sample PDF and Word resumes work; use
 - [ ] As a consultant, open the match address of a client not assigned to you: "not found".
 - [ ] As the client user, open the match address: sent to the portal. A direct call to `/api/resumes/match` is refused.
 - [ ] The change log (Settings) shows a "resume.match" entry.
+- [ ] After submitting from the match screen, the profile on the requisition shows "Match NN%". "Why NN% match" opens the reasons.
+- [ ] A profile added with the manual "Submit a profile" form has no match badge.
+- [ ] Once at least one profile has a score, "Sort: Best match" appears and puts scored profiles first, highest first.
+- [ ] In the browser inspector, change the hidden `matchToken` value before submitting: the profile is still created but with no match score.
+- [ ] As the client, open the requisition in the portal: candidates show, but no match percentage anywhere.
+- [ ] A candidate with a fractional experience such as 3.9 years submits without a browser validation error.

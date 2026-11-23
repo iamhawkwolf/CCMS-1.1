@@ -6,20 +6,21 @@ import { loadSettings } from "@/lib/features/server";
 import { resolveFeature } from "@/lib/features/resolve";
 import Link from "next/link";
 import { allowedNextStages, STAGE_LABEL } from "@/lib/requisition/stages";
+import { bandOf, type Band } from "@/lib/resume/match";
 import { StageBadge } from "@/components/stage";
-import { Badge, Card, Empty, Field, Notice, PageHeader, fmtDate } from "@/components/ui";
+import { Badge, Card, Empty, Field, Notice, PageHeader, Pill, fmtDate, type Tone } from "@/components/ui";
 import { addJd, approveAndShare, changeStage, revokeLink, submitProfile } from "../actions";
 
 export const metadata: Metadata = { title: "Requisition" };
 
-export default async function RequisitionPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ error?: string; notice?: string }> }) {
+export default async function RequisitionPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ error?: string; notice?: string; sort?: string }> }) {
   const ctx = await requireStaff();
-  const [{ id }, { error, notice }] = await Promise.all([params, searchParams]);
+  const [{ id }, { error, notice, sort }] = await Promise.all([params, searchParams]);
   const req = await db.requisition.findFirst({
     where: { id, consultancyId: ctx.consultancyId },
     include: {
       client: true,
-      profiles: { orderBy: { submittedAt: "desc" }, include: { events: { orderBy: { at: "desc" }, take: 3 }, interviews: { orderBy: { scheduledAt: "desc" }, take: 1 } } },
+      profiles: { orderBy: sort === "match" ? [{ matchScore: { sort: "desc", nulls: "last" } }, { submittedAt: "desc" }] : [{ submittedAt: "desc" }], include: { events: { orderBy: { at: "desc" }, take: 3 }, interviews: { orderBy: { scheduledAt: "desc" }, take: 1 } } },
       jds: { orderBy: { createdAt: "desc" }, include: { shareLinks: { orderBy: { createdAt: "desc" }, include: { _count: { select: { views: true } }, views: { orderBy: { viewedAt: "desc" }, take: 1 } } } } },
     },
   });
@@ -30,6 +31,8 @@ export default async function RequisitionPage({ params, searchParams }: { params
   const mark = resolveFeature("jd_watermark", ctx.plan, s.account, s.client).enabled;
   const base = process.env.APP_URL ?? "http://localhost:3000";
   const bound = (profileId: string) => changeStage.bind(null, id, profileId);
+  const bandTone: Record<Band, Tone> = { Strong: "green", Good: "blue", Partial: "dim", Weak: "red" };
+  const hasScores = req.profiles.some((p) => p.matchScore != null);
 
   return (
     <>
@@ -45,7 +48,15 @@ export default async function RequisitionPage({ params, searchParams }: { params
       <div className="grid gap-5 xl:grid-cols-[2fr_1fr]">
         <div className="grid content-start gap-5">
           <Card>
-            <h2 className="h-section mb-3">Profiles ({req.profiles.length})</h2>
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <h2 className="h-section">Profiles ({req.profiles.length})</h2>
+              {hasScores && (
+                <div className="flex items-center gap-2 text-sm"><span className="faint">Sort</span>
+                  <Link href={`/app/requisitions/${id}`} className="btn btn-sm" aria-pressed={sort !== "match"}>Newest</Link>
+                  <Link href={`/app/requisitions/${id}?sort=match`} className="btn btn-sm" aria-pressed={sort === "match"}>Best match</Link>
+                </div>
+              )}
+            </div>
             {req.profiles.length === 0 ? <Empty title="No profiles yet" hint="Add a candidate below. Your client sees them instantly in the portal." /> : (
               <ul className="grid gap-3">
                 {req.profiles.map((p) => {
@@ -58,8 +69,12 @@ export default async function RequisitionPage({ params, searchParams }: { params
                           <div className="font-semibold">{p.name}</div>
                           <div className="faint text-xs">{[p.currentCompany, p.experienceYears ? `${p.experienceYears} yrs` : null, p.expectedCtc ? `expects ₹${p.expectedCtc.toLocaleString("en-IN")}` : null, p.noticeDays != null ? `${p.noticeDays}d notice` : null].filter(Boolean).join(" · ")}</div>
                         </div>
-                        <StageBadge stage={p.stage} />
+                        <div className="flex flex-wrap items-center gap-2">
+                          {p.matchScore != null && <Pill tone={bandTone[bandOf(p.matchScore)]}>Match {p.matchScore}%</Pill>}
+                          <StageBadge stage={p.stage} />
+                        </div>
                       </div>
+                      {p.matchScore != null && <MatchWhy detail={p.matchDetail} score={p.matchScore} method={p.matchMethod} at={p.matchedAt} />}
                       {p.clientComment && <p className="dim mt-2 text-sm">Client: {p.clientComment}</p>}
                       {p.interviews[0] && <p className="faint mt-1 text-xs">Interview {fmtDate(p.interviews[0].scheduledAt)}</p>}
                       {last && <p className="faint mt-1 text-xs">Last update {fmtDate(last.at)}</p>}
@@ -133,5 +148,34 @@ export default async function RequisitionPage({ params, searchParams }: { params
         </div>
       </div>
     </>
+  );
+}
+
+interface SavedDetail { summary?: string | null; matchedSkills?: string[]; missingSkills?: string[]; transferable?: string[]; breakdown?: Array<{ label: string; score: number; weight: number; detail: string }> }
+
+/** The reasons behind a saved match. Staff only: the client portal never shows scores. */
+function MatchWhy({ detail, score, method, at }: { detail: unknown; score: number; method: string | null; at: Date | null }) {
+  const d = (detail && typeof detail === "object" ? detail : {}) as SavedDetail;
+  const list = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : []);
+  const matched = list(d.matchedSkills);
+  const missing = list(d.missingSkills);
+  return (
+    <details className="mt-2">
+      <summary className="cursor-pointer text-sm font-semibold">Why {score}% match</summary>
+      {d.summary && <p className="dim mt-2 text-sm">{d.summary}</p>}
+      {(matched.length > 0 || missing.length > 0) && (
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {matched.map((x) => <Badge key={`m-${x}`} tone="green">{x}</Badge>)}
+          {missing.map((x) => <Badge key={`x-${x}`} tone="red">missing: {x}</Badge>)}
+        </div>
+      )}
+      {list(d.transferable).length > 0 && <p className="dim mt-2 text-sm"><strong>Transferable:</strong> {list(d.transferable).join("; ")}</p>}
+      {Array.isArray(d.breakdown) && (
+        <ul className="dim mt-2 grid gap-1 text-sm">
+          {d.breakdown.map((c) => <li key={c.label}>{c.label} <span className="faint">(weight {c.weight})</span>: {Math.round(c.score * 100)}% <span className="faint">· {c.detail}</span></li>)}
+        </ul>
+      )}
+      <p className="faint mt-2 text-xs">Scored by {method ?? "rules"}{at ? ` on ${fmtDate(at)}` : ""} against the JD at that time. Internal: not shown to the client.</p>
+    </details>
   );
 }

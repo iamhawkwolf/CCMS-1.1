@@ -8,6 +8,7 @@ import { isFeatureOn } from "@/lib/features/server";
 import { addProfile, createJd, createShareLink, moveProfile } from "@/lib/services/requisition";
 import { STAGES, type Stage } from "@/lib/requisition/stages";
 import { audit } from "@/lib/audit";
+import { verifyMatch } from "@/lib/resume/token";
 
 const num = z.preprocess((v) => (v === "" || v == null ? null : Number(v)), z.number().nonnegative().nullable());
 const str = z.string().trim().transform((v) => (v === "" ? null : v)).nullable().optional();
@@ -44,7 +45,10 @@ export async function submitProfile(requisitionId: string, form: FormData): Prom
     .safeParse(Object.fromEntries(form));
   if (!parsed.success) redirect(`/app/requisitions/${requisitionId}?error=${encodeURIComponent(parsed.error.issues[0]?.message ?? "Check the profile details")}`);
 
-  const res = await addProfile(req, ctx.plan, parsed.data, ctx.userId);
+  // Only a score this server signed for this requisition is kept; anything else is ignored.
+  const token = String(form.get("matchToken") ?? "");
+  const match = token ? verifyMatch(token, requisitionId) : null;
+  const res = await addProfile(req, ctx.plan, { ...parsed.data, match }, ctx.userId);
   if (!res.ok) redirect(`/app/requisitions/${requisitionId}?error=${encodeURIComponent(res.error)}`);
   revalidatePath(`/app/requisitions/${requisitionId}`);
   redirect(`/app/requisitions/${requisitionId}${res.warning ? `?notice=${encodeURIComponent(res.warning)}` : ""}`);

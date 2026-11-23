@@ -8,6 +8,7 @@ const MAX_BYTES = 5 * 1024 * 1024;
 interface Component { key: string; label: string; score: number; weight: number; detail: string }
 interface Result {
   file: string;
+  token: string | null;
   candidate: { name: string | null; email: string | null; phone: string | null; currentCompany: string | null; currentTitle: string | null; experienceYears: number | null };
   match: { score: number; band: "Strong" | "Good" | "Partial" | "Weak"; rulesScore: number; aiScore: number | null; method: string; breakdown: Component[]; matchedSkills: string[]; missingSkills: string[]; transferable: string[]; summary: string | null; warnings: string[] };
 }
@@ -131,13 +132,14 @@ export function MatchWorkbench({ requisitionId, submitAction, aiMode }: { requis
 
               <details className="mt-2">
                 <summary className="cursor-pointer text-sm font-semibold">Submit this candidate to the client</summary>
-                <p className="dim mt-2 text-xs">Filled from the resume. Check every field before submitting.</p>
+                <p className="dim mt-2 text-xs">Filled from the resume. Check every field before submitting. The {r.match.score}% match is saved on the profile (visible to your team only).</p>
                 <form action={submitAction} className="mt-3 grid gap-3 sm:grid-cols-2">
+                  {r.token && <input type="hidden" name="matchToken" value={r.token} />}
                   <Field label="Name"><input className="input" name="name" required defaultValue={r.candidate.name ?? ""} /></Field>
                   <Field label="Current company"><input className="input" name="currentCompany" defaultValue={r.candidate.currentCompany ?? ""} /></Field>
                   <Field label="Phone"><input className="input" name="phone" inputMode="tel" defaultValue={r.candidate.phone ?? ""} /></Field>
                   <Field label="Email"><input className="input" name="email" type="email" defaultValue={r.candidate.email ?? ""} /></Field>
-                  <Field label="Experience (years)"><input className="input" name="experienceYears" type="number" step="0.5" min={0} defaultValue={r.candidate.experienceYears ?? ""} /></Field>
+                  <Field label="Experience (years)"><input className="input" name="experienceYears" type="number" step="0.1" min={0} defaultValue={r.candidate.experienceYears ?? ""} /></Field>
                   <Field label="Notice period (days)"><input className="input" name="noticeDays" type="number" min={0} /></Field>
                   <div className="flex items-end"><button className="btn btn-primary" type="submit">Submit to client</button></div>
                 </form>

@@ -3,6 +3,7 @@ import { audit } from "@/lib/audit";
 import { db } from "@/lib/db";
 import { configuredProvider, MAX_RESUME_BYTES, parseResume, ResumeFileError } from "@/lib/resume";
 import { rankResumes } from "@/lib/resume/match";
+import { signMatch } from "@/lib/resume/token";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -69,7 +70,8 @@ export async function POST(req: Request): Promise<Response> {
   return Response.json({
     results: ranked.map(({ id, ...m }) => {
       const r = byId.get(id)!;
-      return { file: r.name, candidate: r.fields, match: m };
+      // Signed so that "Submit to client" can save this exact score on the profile (requisition matches only).
+      return { file: r.name, candidate: r.fields, match: m, token: requisitionId ? signMatch(requisitionId, m) : null };
     }),
     failed,
   });
