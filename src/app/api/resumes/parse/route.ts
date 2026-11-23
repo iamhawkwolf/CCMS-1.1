@@ -1,4 +1,4 @@
-import { getCtx } from "@/lib/auth/context";
+import { clientScope, getCtx } from "@/lib/auth/context";
 import { db } from "@/lib/db";
 import { emailKey, phoneKey } from "@/lib/requisition/stages";
 import { MAX_RESUME_BYTES, parseResume, ResumeFileError } from "@/lib/resume";
@@ -38,7 +38,7 @@ export async function POST(req: Request): Promise<Response> {
     const existing =
       pk || ek
         ? await db.profile.findMany({
-            where: { OR: [...(pk ? [{ phoneKey: pk }] : []), ...(ek ? [{ emailKey: ek }] : [])], requisition: { consultancyId: ctx.consultancyId } },
+            where: { OR: [...(pk ? [{ phoneKey: pk }] : []), ...(ek ? [{ emailKey: ek }] : [])], requisition: { consultancyId: ctx.consultancyId, client: clientScope(ctx) } },
             select: { id: true, name: true, requisition: { select: { id: true, title: true } } },
             take: 5,
           })

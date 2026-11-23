@@ -5,6 +5,8 @@ import type { ExtractionMethod, ExtractionResult, ParsedResume } from "./types";
 
 export { MAX_RESUME_BYTES, ResumeFileError } from "./text";
 export type { ExtractionResult, ParsedResume } from "./types";
+export { analyseJd, matchResume, rankResumes } from "./match";
+export type { MatchResult } from "./match";
 
 export type Provider = "rules" | "ollama" | "claude";
 
@@ -61,8 +63,8 @@ export async function extractFields(text: string, opts: ExtractOptions = {}): Pr
 }
 
 /** Upload bytes in, reviewed-by-a-human-later fields out. Throws ResumeFileError for bad files. */
-export async function parseResume(file: Uint8Array, opts: ExtractOptions = {}): Promise<ExtractionResult & { kind: "pdf" | "docx"; pages: number | null; chars: number }> {
+export async function parseResume(file: Uint8Array, opts: ExtractOptions = {}): Promise<ExtractionResult & { text: string; kind: "pdf" | "docx"; pages: number | null; chars: number }> {
   const { text, kind, pages } = await readResumeText(file);
   const result = await extractFields(text, opts);
-  return { ...result, kind, pages, chars: text.length };
+  return { ...result, text, kind, pages, chars: text.length };
 }

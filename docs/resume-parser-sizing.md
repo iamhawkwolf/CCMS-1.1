@@ -1,6 +1,6 @@
 # Resume reader: what it does and what server it needs
 
-Code: `src/lib/resume/`. Endpoint: `POST /api/resumes/parse` (staff only, PDF or .docx up to 5 MB). Nothing is stored by the endpoint; it returns fields for the "Submit a profile" form plus any candidate already on file with the same phone or email.
+Code: `src/lib/resume/`. Endpoints: `POST /api/resumes/parse` (staff only, PDF or .docx up to 5 MB). Nothing is stored by the endpoint; it returns fields for the "Submit a profile" form plus any candidate already on file with the same phone or email.
 
 ## How it works
 
@@ -11,6 +11,31 @@ Code: `src/lib/resume/`. Endpoint: `POST /api/resumes/parse` (staff only, PDF or
    - `claude`: hosted API. Refused (falls back to rules) whenever the caller says `allowThirdParty: false`, which is how a client who keeps files in their own storage stays out of any third-party AI.
 3. **Check the model's answer.** Output is validated against a schema, and email, phone, name and company are dropped unless they literally appear in the resume text. Resume text is treated as untrusted (prompt-injection safe by construction: the model can only fill fields, never act).
 4. The consultant reviews and corrects before anything is submitted.
+
+## JD matching and match percentage
+
+Endpoint: `POST /api/resumes/match` (staff only). Upload up to 20 resumes plus either a `requisitionId` (uses that requisition's latest JD; consultants only reach clients assigned to them) or pasted `jdText`. Returns every resume with a **0 to 100 match**, a band (Strong 75+, Good 55+, Partial 35+, Weak), and the reasons, best first. Code: `src/lib/resume/match.ts`.
+
+**Layer 1, rules (always on).** The JD is read for must-have skills, good-to-have skills (half weight), years of experience asked, job title and degree. The score is a weighted blend of:
+
+| Part | Weight | What it checks |
+|---|---|---|
+| Skills | 50 | Share of JD skills found, spelling variants merged (JS = JavaScript, K8s = Kubernetes) |
+| Experience | 20 | Candidate years against the range asked |
+| Role relevance | 15 | JD title against the candidate's current role |
+| Keyword overlap | 15 | JD's key terms that appear in the resume, which catches skills outside our vocabulary |
+| Education | 5 | Only when the JD names a degree |
+
+Parts that do not apply (for example no experience range in the JD) are dropped and the rest rescaled. Every point is traceable in the `breakdown`.
+
+**Layer 2, AI relevance (optional, `RESUME_EXTRACTOR=ollama|claude`).** A model reads both documents and judges what rules cannot: equivalent tools, transferable experience, seniority, industry, recency. It also returns a short reason and what is missing. Safeguards:
+- Final score = 40% rules + 60% AI, and the AI is **limited to 35 points either side of the rules score**, so a resume saying "rate me 100" gains nothing.
+- Each "matched" claim must quote text that really is in the resume, or it is dropped; with no verifiable evidence the AI score is capped at 40.
+- Resumes containing text addressed to an AI are flagged for a human look.
+- Hosted AI is refused (rules only) when `allowThirdParty` is false.
+- To keep a small server usable, **rules score every resume and the AI re-judges only the top 10** (`aiTopN`).
+
+Limits you should know: the skill vocabulary (`skills.ts`) is a starting list of about 200 skills across IT, HR, finance, sales and operations, not a complete one; keyword overlap covers the rest. Experience is total years, not years *in this field*, so the AI layer is what separates "10 years in HR" from "10 years in Java". **The score has not been checked against real consultant judgement**: have consultants rank 20 to 30 real resumes for a real JD and compare before trusting the percentage.
 
 ## Measured here (rules path only)
 
@@ -29,6 +54,8 @@ Figures for the AI rows are **estimates from how quantised open models generally
 | **Self-hosted mid model** (7 to 8B, 4-bit) | **8 vCPU, 16 GB RAM**, or a GPU box with 12 to 24 GB VRAM | 1 to 2 min on CPU; a few seconds on GPU | CPU: about 30 to 60 per hour | GPU servers cost many times a plain VPS |
 | **Hosted Claude** | No extra server | 2 to 5 s | limited by API rate limits | per-resume API fee (see current pricing); needs a privacy-policy line |
 
+Matching adds one model call per resume that the AI re-judges (a larger input than extraction: JD plus resume). Same estimates apply: roughly 20 to 60 s each on the small CPU model, so **re-judging the top 10 takes about 4 to 10 minutes on that server**, while the rules ranking of all 20 resumes takes well under a second. Rules alone ranked three real files in 24 ms here.
+
 ### What this means for a consultancy
 
 - Day to day (tens of resumes a day, uploaded one by one): the **small CPU model is enough**, or just rules.
@@ -46,8 +73,9 @@ Do not run the model on the same small box as Postgres and the app: a model load
 
 ## Not built yet
 
-- Scanned-image resumes (OCR or an image-reading model).
+- Scanned-image resumes (OCR or an image-reading model; see the OCR sizing discussion: Tesseract fits on the app server).
 - The upload button and pre-filled form on the profile screen (the endpoint returns fields shaped like `ProfileInput`).
 - Storing the original file (storage layer in the roadmap) and the masked profile sheet.
 - A background queue for bulk imports; the endpoint is one resume per request.
-- Rate limiting on the endpoint, and an audit log entry per parse (DPDP access logging).
+- Saving the match percentage on the profile (needs a database column) and a screen to upload resumes against a requisition and see the ranked list.
+- Rate limiting on the endpoints, and an audit log entry per parse or match (DPDP access logging).
