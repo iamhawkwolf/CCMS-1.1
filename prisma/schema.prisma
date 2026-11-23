@@ -323,6 +323,9 @@ model Profile {
   expectedCtc      Int?
   noticeDays       Int?
   resumeUrl        String?
+  // Uploaded original (consultant side only). Storage KEY, never a URL.
+  resumeKey        String?
+  resumeName       String?
   stage            ProfileStage @default(SUBMITTED)
   clientComment    String?
   submittedAt      DateTime     @default(now())
@@ -523,4 +526,19 @@ model AuditLog {
   consultancy   Consultancy @relation(fields: [consultancyId], references: [id], onDelete: Cascade)
 
   @@index([consultancyId, at])
+}
+
+// A resume uploaded and read, waiting for the consultant to review and submit the profile.
+model ResumeUpload {
+  id             String   @id @default(cuid())
+  consultancyId  String
+  requisitionId  String
+  key            String
+  fileName       String
+  size           Int
+  extracted      Json
+  createdById    String
+  createdAt      DateTime @default(now())
+
+  @@index([consultancyId, requisitionId])
 }

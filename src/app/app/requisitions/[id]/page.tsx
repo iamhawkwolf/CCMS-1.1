@@ -7,13 +7,13 @@ import { resolveFeature } from "@/lib/features/resolve";
 import { allowedNextStages, STAGE_LABEL } from "@/lib/requisition/stages";
 import { StageBadge } from "@/components/stage";
 import { Badge, Card, Empty, Field, Notice, PageHeader, fmtDate } from "@/components/ui";
-import { addJd, approveAndShare, changeStage, revokeLink, submitProfile } from "../actions";
+import { addJd, approveAndShare, changeStage, revokeLink, submitProfile, uploadResume } from "../actions";
 
 export const metadata: Metadata = { title: "Requisition" };
 
-export default async function RequisitionPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ error?: string; notice?: string }> }) {
+export default async function RequisitionPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ error?: string; notice?: string; upload?: string }> }) {
   const ctx = await requireStaff();
-  const [{ id }, { error, notice }] = await Promise.all([params, searchParams]);
+  const [{ id }, { error, notice, upload }] = await Promise.all([params, searchParams]);
   const req = await db.requisition.findFirst({
     where: { id, consultancyId: ctx.consultancyId },
     include: {
@@ -25,6 +25,9 @@ export default async function RequisitionPage({ params, searchParams }: { params
   if (!req || !(await getClientFor(ctx, req.clientId))) notFound();
   const s = await loadSettings(ctx.consultancyId, req.clientId);
   if (!resolveFeature("requisition_tracker", ctx.plan, s.account, s.client).enabled) notFound();
+  const draft = upload ? await db.resumeUpload.findFirst({ where: { id: upload, consultancyId: ctx.consultancyId, requisitionId: id } }) : null;
+  const pre = (draft?.extracted ?? {}) as Record<string, string | number | null>;
+  const dv = (k: string) => (pre[k] ?? "") as string | number;
   const mask = resolveFeature("number_masking", ctx.plan, s.account, s.client).enabled;
   const mark = resolveFeature("jd_watermark", ctx.plan, s.account, s.client).enabled;
   const base = process.env.APP_URL ?? "http://localhost:3000";
@@ -58,6 +61,7 @@ export default async function RequisitionPage({ params, searchParams }: { params
                         </div>
                         <StageBadge stage={p.stage} />
                       </div>
+                      {p.resumeKey && <p className="mt-1 text-xs"><a className="link" href={`/api/resume/${p.id}`}>Download original resume</a></p>}
                       {p.clientComment && <p className="dim mt-2 text-sm">Client: {p.clientComment}</p>}
                       {p.interviews[0] && <p className="faint mt-1 text-xs">Interview {fmtDate(p.interviews[0].scheduledAt)}</p>}
                       {last && <p className="faint mt-1 text-xs">Last update {fmtDate(last.at)}</p>}
@@ -78,15 +82,21 @@ export default async function RequisitionPage({ params, searchParams }: { params
           <Card>
             <h2 className="h-section mb-1">Submit a profile</h2>
             <p className="dim mb-4 text-sm">Duplicates are caught by phone number or email.</p>
-            <form action={submitProfile.bind(null, id)} className="grid gap-4 sm:grid-cols-2">
-              <Field label="Name"><input className="input" name="name" required /></Field>
-              <Field label="Current company"><input className="input" name="currentCompany" /></Field>
-              <Field label="Phone"><input className="input" name="phone" inputMode="tel" /></Field>
-              <Field label="Email"><input className="input" name="email" type="email" /></Field>
-              <Field label="Experience (years)"><input className="input" name="experienceYears" type="number" step="0.5" min={0} /></Field>
-              <Field label="Notice period (days)"><input className="input" name="noticeDays" type="number" min={0} /></Field>
-              <Field label="Current CTC (₹)"><input className="input" name="currentCtc" type="number" min={0} /></Field>
-              <Field label="Expected CTC (₹)"><input className="input" name="expectedCtc" type="number" min={0} /></Field>
+            <form action={uploadResume.bind(null, id)} encType="multipart/form-data" className="mb-5 flex flex-wrap items-end gap-2 rounded-lg border border-dashed p-3">
+              <Field label="Upload a resume (PDF or Word, up to 4 MB) to pre-fill the form"><input className="input" name="resume" type="file" accept=".pdf,.docx" required /></Field>
+              <button className="btn" type="submit">Read resume</button>
+            </form>
+            {draft && <Notice>Read from {draft.fileName}. Check every field below: these are guesses.</Notice>}
+            <form key={draft?.id ?? "blank"} action={submitProfile.bind(null, id)} className="grid gap-4 sm:grid-cols-2">
+              {draft && <input type="hidden" name="uploadId" value={draft.id} />}
+              <Field label="Name"><input className="input" name="name" required defaultValue={dv("name")} /></Field>
+              <Field label="Current company"><input className="input" name="currentCompany" defaultValue={dv("currentCompany")} /></Field>
+              <Field label="Phone"><input className="input" name="phone" inputMode="tel" defaultValue={dv("phone")} /></Field>
+              <Field label="Email"><input className="input" name="email" type="email" defaultValue={dv("email")} /></Field>
+              <Field label="Experience (years)"><input className="input" name="experienceYears" type="number" step="0.5" min={0} defaultValue={dv("experienceYears")} /></Field>
+              <Field label="Notice period (days)"><input className="input" name="noticeDays" type="number" min={0} defaultValue={dv("noticeDays")} /></Field>
+              <Field label="Current CTC (₹)"><input className="input" name="currentCtc" type="number" min={0} defaultValue={dv("currentCtc")} /></Field>
+              <Field label="Expected CTC (₹)"><input className="input" name="expectedCtc" type="number" min={0} defaultValue={dv("expectedCtc")} /></Field>
               <Field label="Resume link"><input className="input" name="resumeUrl" type="url" /></Field>
               <div className="flex items-end"><button className="btn btn-primary" type="submit">Submit to client</button></div>
             </form>

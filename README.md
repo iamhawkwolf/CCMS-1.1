@@ -113,7 +113,7 @@ If you change a template's wording or parameter order in `src/lib/whatsapp/templ
 - **Email.** There is no email provider yet; email notifications are only logged.
 - **WhatsApp for employees and candidates** (document requests, interview confirmations) and **Kannada, Hindi and Tamil templates**. Only the five client and staff templates exist.
 - **Razorpay and UPI payment links** on invoices. `Invoice.paymentLinkUrl` is ready.
-- **File uploads.** Resumes are currently links, and JDs are pasted text. Add storage (S3 compatible) and PDF watermarking.
+- **Resumes.** PDF and Word upload, text reading and form pre-fill are built (see roadmap section 3). Still to do: OCR for scans, masked client profile sheet, JD file upload, PDF watermarking.
 - **Analytics and monthly branded report.** Data is there; no pages yet.
 - **Time tracking timers and calendar sync.** Schema (`TimeEntry`) exists; no UI.
 - **Staff invites by email, password reset, rate limiting on login.**

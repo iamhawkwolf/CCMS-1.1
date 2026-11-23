@@ -8,6 +8,10 @@ import { isFeatureOn } from "@/lib/features/server";
 import { addProfile, createJd, createShareLink, moveProfile } from "@/lib/services/requisition";
 import { STAGES, type Stage } from "@/lib/requisition/stages";
 import { audit } from "@/lib/audit";
+import { randomUUID } from "node:crypto";
+import { detectKind, extractText, MAX_RESUME_BYTES, MIME } from "@/lib/resume/file";
+import { parseResume } from "@/lib/resume/parse";
+import { getStore } from "@/lib/storage";
 
 const num = z.preprocess((v) => (v === "" || v == null ? null : Number(v)), z.number().nonnegative().nullable());
 const str = z.string().trim().transform((v) => (v === "" ? null : v)).nullable().optional();
@@ -40,11 +44,14 @@ export async function submitProfile(requisitionId: string, form: FormData): Prom
   const req = await loadReq(ctx, requisitionId);
   if (!req) redirect("/app/requisitions");
   const parsed = z
-    .object({ name: z.string().trim().min(2, "Enter the candidate's name"), phone: str, email: z.string().trim().email().or(z.literal("")).transform((v) => v || null).optional(), currentCompany: str, experienceYears: num, currentCtc: num, expectedCtc: num, noticeDays: num, resumeUrl: str })
+    .object({ name: z.string().trim().min(2, "Enter the candidate's name"), phone: str, email: z.string().trim().email().or(z.literal("")).transform((v) => v || null).optional(), currentCompany: str, experienceYears: num, currentCtc: num, expectedCtc: num, noticeDays: num, resumeUrl: str, uploadId: str })
     .safeParse(Object.fromEntries(form));
   if (!parsed.success) redirect(`/app/requisitions/${requisitionId}?error=${encodeURIComponent(parsed.error.issues[0]?.message ?? "Check the profile details")}`);
 
-  const res = await addProfile(req, ctx.plan, parsed.data, ctx.userId);
+  const { uploadId, ...input } = parsed.data;
+  const upload = uploadId ? await db.resumeUpload.findFirst({ where: { id: uploadId, consultancyId: ctx.consultancyId, requisitionId } }) : null;
+  const res = await addProfile(req, ctx.plan, { ...input, resumeKey: upload?.key, resumeName: upload?.fileName }, ctx.userId);
+  if (upload && res.ok) await db.resumeUpload.delete({ where: { id: upload.id } });
   if (!res.ok) redirect(`/app/requisitions/${requisitionId}?error=${encodeURIComponent(res.error)}`);
   revalidatePath(`/app/requisitions/${requisitionId}`);
   redirect(`/app/requisitions/${requisitionId}${res.warning ? `?notice=${encodeURIComponent(res.warning)}` : ""}`);
@@ -90,4 +97,30 @@ export async function revokeLink(requisitionId: string, linkId: string): Promise
   if (!req) return;
   await db.shareLink.updateMany({ where: { id: linkId, jd: { requisitionId } }, data: { revokedAt: new Date() } });
   revalidatePath(`/app/requisitions/${requisitionId}`);
+}
+
+/** Reads an uploaded PDF or Word resume and sends the consultant back to the form with fields pre-filled. */
+export async function uploadResume(requisitionId: string, form: FormData): Promise<void> {
+  const ctx = await requireStaff();
+  const req = await loadReq(ctx, requisitionId);
+  if (!req) redirect("/app/requisitions");
+  const back = (q: string) => redirect(`/app/requisitions/${requisitionId}?${q}`);
+  const file = form.get("resume");
+  if (!(file instanceof File) || file.size === 0) back("error=" + encodeURIComponent("Choose a PDF or Word file"));
+  const f = file as File;
+  if (f.size > MAX_RESUME_BYTES) back("error=" + encodeURIComponent("File is over 4 MB. Compress it or use the resume link field."));
+  const buf = Buffer.from(await f.arrayBuffer());
+  const kind = detectKind(buf);
+  if (!kind) back("error=" + encodeURIComponent("Only PDF and Word (.docx) resumes are accepted"));
+
+  let text = "";
+  try { text = await extractText(buf, kind!); } catch { /* unreadable: fall through to manual entry */ }
+
+  const key = `${ctx.consultancyId}/resumes/${randomUUID()}.${kind}`;
+  try { await getStore().put(key, buf, MIME[kind!]); } catch (e) { back("error=" + encodeURIComponent(e instanceof Error ? e.message : "Could not store the file")); }
+  const extracted = parseResume(text);
+  const up = await db.resumeUpload.create({ data: { consultancyId: ctx.consultancyId, requisitionId, key, fileName: f.name.slice(0, 120), size: buf.length, extracted: { ...extracted }, createdById: ctx.userId } });
+  await audit(ctx.consultancyId, ctx.userId, "resume.upload", "ResumeUpload", up.id);
+  const note = text.trim().length < 40 ? "&notice=" + encodeURIComponent("Could not read text from this file (it may be a scan). Fill the details in by hand; the file is still attached.") : "";
+  back(`upload=${up.id}${note}`);
 }

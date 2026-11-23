@@ -16,6 +16,8 @@ export interface ProfileInput {
   expectedCtc?: number | null;
   noticeDays?: number | null;
   resumeUrl?: string | null;
+  resumeKey?: string | null;
+  resumeName?: string | null;
 }
 
 export type AddProfileResult =
@@ -54,6 +56,8 @@ export async function addProfile(req: { id: string; clientId: string; consultanc
       expectedCtc: input.expectedCtc,
       noticeDays: input.noticeDays,
       resumeUrl: input.resumeUrl,
+      resumeKey: input.resumeKey,
+      resumeName: input.resumeName,
       events: { create: { toStage: "SUBMITTED", actorId, comment: "Profile submitted" } },
     },
   });

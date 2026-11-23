@@ -52,7 +52,11 @@ After each step there is something new to test and demo.
 2. **What "client does not want to share data" means.** Only the resume *files* stay in the client's storage (easier), or also the *extracted details* (name, experience, etc.), so nothing personal is stored in our database (much harder: everything fetched on demand).
 3. **Field extraction method** (section 3).
 
-## 3. Planned: resume handling
+## 3. Resume handling
+
+**Built (first slice):** on a requisition, a consultant uploads a PDF or Word resume (up to 4 MB, checked by file signature). The text is read with rules (no AI, nothing leaves our servers), the "Submit a profile" form is pre-filled with name, phone, email, current company, experience, CTC and notice period, and the consultant corrects it. The original is stored privately by key and downloaded only by staff through `/api/resume/<profile id>`, with an audit entry. Client users never get it. Storage is Vercel Blob (private) when `BLOB_READ_WRITE_TOKEN` is set, otherwise the local `uploads/` folder. **Not built yet:** OCR for scanned resumes (these show a "fill in by hand" notice), the masked profile sheet for clients, stricter blind mode, importing from the client's own storage, direct-to-storage uploads (the 4 MB cap exists because of Vercel's request limit), retention and deletion on request.
+
+The plan below is the full design.
 
 ### Flow
 1. Consultant uploads a PDF or Word resume (scanned pages included) or imports it from the client's storage.
@@ -117,7 +121,10 @@ For you and for demos to prospects. No real data, no real messages. Not yet trie
    | `SESSION_SECRET` | output of `openssl rand -base64 32` |
    | `APP_URL` | your site's address, e.g. `https://ccms-demo.vercel.app` (set it after the first deploy, then redeploy) |
    | `DEMO_MODE` | `1` |
+   | `BLOB_READ_WRITE_TOKEN` | added for you when you create a Blob store (step 3a); resume uploads fail without it |
    | `DEMO_PASSWORD` | optional; skip it and the typed-password login is unguessable, the buttons still work |
+
+   **3a. File storage:** in the Vercel project open *Storage*, create a **Blob** store, choose **Private**, and connect it to the project. Vercel adds `BLOB_READ_WRITE_TOKEN` itself. Redeploy after.
 
    Do **not** set `ALLOW_SIGNUP`, `WHATSAPP_PROVIDER` or `CRON_SECRET`. Signup stays closed, nothing is sent, and no scheduler is needed (the demo reset runs the reminder jobs once, so the inbox already has alerts).
 4. Deploy, open the address, and click **Explore as Admin**. That is your **testing login** for demos: share the address and tell people to click an "Explore as" button. Use **Reset demo data** (top banner) before each demo.
