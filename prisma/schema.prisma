@@ -124,9 +124,12 @@ model User {
   phone          String?
   active         Boolean  @default(true)
   createdAt      DateTime @default(now())
+  // Sessions issued before this moment are rejected. Set when the password is reset.
+  passwordChangedAt DateTime?
 
   consultancy    Consultancy        @relation(fields: [consultancyId], references: [id], onDelete: Cascade)
   client         Client?            @relation("ClientUsers", fields: [clientId], references: [id], onDelete: Cascade)
+  resetTokens    PasswordResetToken[]
   assignments    ClientAssignment[]
   assignedTasks  Task[]             @relation("TaskAssignee")
   timeEntries    TimeEntry[]
@@ -529,4 +532,27 @@ model AuditLog {
   consultancy   Consultancy @relation(fields: [consultancyId], references: [id], onDelete: Cascade)
 
   @@index([consultancyId, at])
+}
+
+// One row per password-reset link. Only a hash of the token is stored, so a database leak cannot be used to reset accounts.
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// A hit against a rate limit (failed sign-ins, reset requests). Plain table so it works on any host, serverless included.
+model RateLimitHit {
+  id        String   @id @default(cuid())
+  key       String
+  createdAt DateTime @default(now())
+
+  @@index([key, createdAt])
 }

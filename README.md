@@ -28,6 +28,7 @@ The sign-in page has three buttons, **Explore as Admin / Consultant / Client**: 
 - **Nothing is ever sent.** The demo consultancy is flagged `isDemo`, and delivery marks its WhatsApp and email as sent without contacting anyone, so the made-up phone numbers are safe even when real WhatsApp is live for other accounts. Covered by `tests/integration/demo.test.ts`.
 - **Reset.** The demo admin has a **Reset demo data** button in the banner at the top. From a terminal: `npm run demo:reset`. Both delete and rebuild only the demo consultancy, never anyone else's data, so they are safe on a database that holds real accounts. Dates are relative to today, so it always looks current.
 - **Passwords.** The accounts are `admin@demo.test`, `consultant@demo.test`, `client@demo.test` (and `karan@demo.test`, a second consultant). The password is `DEMO_PASSWORD`, which defaults to `demo12345` locally and to a random one in production, so the public default never works on a hosted copy.
+- **Password reset and rate limiting.** `/forgot-password` emails a one-hour, single-use link (only a hash of it is stored); a reset signs the user out on every device. Sign-in allows 5 wrong passwords per email and 20 per address in 15 minutes; reset requests are limited to 3 per email and 10 per address per hour. Limits live in Postgres (`RateLimitHit`) and the address comes from `x-forwarded-for`, so only trust it behind a proxy you control. Demo logins cannot be reset.
 - **Sign-up** is open in development and closed in production (invite-only) unless `ALLOW_SIGNUP=1`.
 - The demo JD share link is `/share/demo-share-link-token`. To see duplicate detection, submit a profile with phone `9845012345` on the Senior Accountant requisition.
 
@@ -118,7 +119,8 @@ If you change a template's wording or parameter order in `src/lib/whatsapp/templ
 - **File uploads.** Resumes are currently links, and JDs are pasted text. Add storage (S3 compatible) and PDF watermarking.
 - **Analytics and monthly branded report.** Data is there; no pages yet.
 - **Time tracking timers and calendar sync.** Schema (`TimeEntry`) exists; no UI.
-- **Staff invites by email, password reset, rate limiting on login.**
+- **Staff invites by email.** Needs the email provider below.
+- **A real email provider.** `EMAIL_PROVIDER` is `console`: password-reset emails are printed in development and **not sent** in production, so until a provider is wired into `src/lib/email.ts` no one can reset a password by email in production.
 - **Data protection.** Candidate and employee data falls under India's DPDP Act: consent, retention and access logging need designing before real data goes in.
 - Prisma 7 will drop the `package.json#prisma` seed config; move to `prisma.config.ts` when upgrading.
 

@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import type { Plan, Prisma, Role } from "@prisma/client";
 import { db } from "@/lib/db";
-import { readSessionUserId } from "./session";
+import { readSession } from "./session";
 
 export interface Ctx {
   userId: string;
@@ -18,10 +18,12 @@ export interface Ctx {
 }
 
 export async function getCtx(): Promise<Ctx | null> {
-  const userId = await readSessionUserId();
-  if (!userId) return null;
-  const u = await db.user.findUnique({ where: { id: userId }, include: { consultancy: true } });
+  const session = await readSession();
+  if (!session) return null;
+  const u = await db.user.findUnique({ where: { id: session.userId }, include: { consultancy: true } });
   if (!u || !u.active) return null;
+  // A password reset signs the user out of every device. Token times have whole-second precision.
+  if (u.passwordChangedAt && session.issuedAt.getTime() < Math.floor(u.passwordChangedAt.getTime() / 1000) * 1000) return null;
   return {
     userId: u.id,
     name: u.name,

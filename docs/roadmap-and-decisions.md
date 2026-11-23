@@ -24,7 +24,7 @@ Choices made to fit that plan:
 | Resume masking default | Contact details hidden; "blind" mode as a per-client switch | A client wants stricter |
 
 ### Build order
-1. **Demo-ready (done 23 Nov, except password reset):** demo consultancy with an `isDemo` flag that blocks all real messages, one-click demo logins, a reset-to-fresh-data command and button, invite-only signup in production. Password reset is not built yet.
+1. **Demo-ready (done 23 Nov):** demo consultancy with an `isDemo` flag that blocks all real messages, one-click demo logins, a reset-to-fresh-data command and button, invite-only signup in production. Password reset and sign-in rate limiting are done; they need an email provider before they work in production.
 2. **Resumes:** storage layer (our storage and client's own S3-compatible), upload, text reading, rule-based extraction, masking, review screen, blind profile sheet.
 3. **Finish V1:** staff profiles screen, time-tracking timers, monthly branded report and analytics, Razorpay and UPI payment links, interview scheduling page.
 4. **V2:** candidate database, onboarding and exit workflows, document vault (shares the storage layer), policy and handbook builder.
@@ -88,7 +88,7 @@ The consultant's corrections on the review screen are labelled examples; keep th
 - [x] **Demo account isolation.** Done: the demo consultancy is flagged `isDemo` and delivery never contacts anyone for it (tested).
 - [x] **Demo setup only touches the demo consultancy.** `npm run db:seed` is now the same as `npm run demo:reset`, and it never deletes anyone else's data. On a hosted copy set `DEMO_PASSWORD` or leave it unset (random).
 - [x] **Close open signup.** Signup is off in production unless `ALLOW_SIGNUP=1`. Still to build: a way for an admin to invite staff and client users by email, and a first real admin account (for now, set `ALLOW_SIGNUP=1` briefly).
-- [ ] Password reset and login rate limiting.
+- [x] Password reset and login rate limiting (built; password-reset emails are not sent in production until an email provider is wired into `src/lib/email.ts`).
 - [ ] An email provider (email is only logged today).
 - [ ] Automated database backups, and a tested restore.
 - [ ] Your own domain from day one (for example `app.yourcompany.in`), so moving servers is a DNS change.

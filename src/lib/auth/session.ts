@@ -24,15 +24,19 @@ export async function createSession(userId: string): Promise<void> {
   });
 }
 
-export async function readSessionUserId(): Promise<string | null> {
+export async function readSession(): Promise<{ userId: string; issuedAt: Date } | null> {
   const token = (await cookies()).get(COOKIE)?.value;
   if (!token) return null;
   try {
     const { payload } = await jwtVerify(token, secret(), { algorithms: ["HS256"] });
-    return payload.sub ?? null;
+    return payload.sub ? { userId: payload.sub, issuedAt: new Date((payload.iat ?? 0) * 1000) } : null;
   } catch {
     return null;
   }
+}
+
+export async function readSessionUserId(): Promise<string | null> {
+  return (await readSession())?.userId ?? null;
 }
 
 export async function destroySession(): Promise<void> {

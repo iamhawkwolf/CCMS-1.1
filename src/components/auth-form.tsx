@@ -3,7 +3,7 @@ import { useActionState } from "react";
 import Link from "next/link";
 
 export interface AuthField { name: string; label: string; type?: string; autoComplete?: string; placeholder?: string }
-export type AuthState = { error?: string; /** Non-secret values to put back after a failed submit (React clears the form otherwise). */ values?: Record<string, string> } | undefined;
+export type AuthState = { error?: string; /** A non-error message shown instead of the form fields' error. */ notice?: string; /** Non-secret values to put back after a failed submit (React clears the form otherwise). */ values?: Record<string, string> } | undefined;
 
 export function AuthForm({ action, fields, submit, alt }: { action: (s: AuthState, f: FormData) => Promise<AuthState>; fields: AuthField[]; submit: string; alt?: { text: string; href: string; label: string } }) {
   const [state, formAction, pending] = useActionState(action, undefined);
@@ -15,6 +15,11 @@ export function AuthForm({ action, fields, submit, alt }: { action: (s: AuthStat
           <input className="input" name={f.name} type={f.type ?? "text"} autoComplete={f.autoComplete} placeholder={f.placeholder} defaultValue={state?.values?.[f.name]} required />
         </label>
       ))}
+      {state?.notice && (
+        <p role="status" className="badge b-green" style={{ borderRadius: 12, padding: ".6rem .8rem", fontSize: ".85rem" }}>
+          {state.notice}
+        </p>
+      )}
       {state?.error && (
         <p role="alert" className="badge b-red" style={{ borderRadius: 12, padding: ".6rem .8rem", fontSize: ".85rem" }}>
           {state.error}

@@ -107,3 +107,15 @@ Needs a requisition with a JD (section 6). Sample PDF and Word resumes work; use
 - [ ] In the browser inspector, change the hidden `matchToken` value before submitting: the profile is still created but with no match score.
 - [ ] As the client, open the requisition in the portal: candidates show, but no match percentage anywhere.
 - [ ] A candidate with a fractional experience such as 3.9 years submits without a browser validation error.
+
+## 13. Password reset and sign-in limits
+In development the reset link is printed in the terminal running `npm run dev` (look for `[email]`).
+- [ ] On the sign-in page, "Forgot your password?" opens `/forgot-password`.
+- [ ] A known and an unknown email show the same message. Nothing says whether the account exists.
+- [ ] The link opens "Choose a new password". Mismatched or short passwords are refused.
+- [ ] After changing it, you land on sign-in with "Password changed". The new password works; the old one does not.
+- [ ] Open the same link again: "This link no longer works". Request two links in a row: only the newest works.
+- [ ] Stay signed in on one browser, reset the password from another: the first browser is signed out on its next click.
+- [ ] Five wrong passwords for one email: the next try, even with the right password, says "Too many sign-in attempts". Resetting the password lifts it.
+- [ ] Request a fourth reset link for the same email within an hour: the message is the same but no new link is printed.
+- [ ] Demo logins (`admin@demo.test`) get no reset link.
