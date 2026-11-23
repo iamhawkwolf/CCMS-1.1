@@ -6,6 +6,34 @@ For what exists today see [`README.md`](../README.md). For the original product 
 
 ---
 
+## 0. The plan (from the owner, 23 Nov 2026)
+
+1. Build the entire product.
+2. Have a **testing login** to demo to clients.
+3. Test every feature in the app **now** (see [`test-checklist.md`](test-checklist.md)).
+4. Move to a proper server later, **once there is a client**.
+
+Choices made to fit that plan:
+
+| Question | Choice for now | Revisit when |
+|---|---|---|
+| Hosting | Vercel + Neon free for testing. Before showing it to clients, upgrade Vercel to Pro or ask Vercel support: the free plan is for non-commercial personal use ([fair use](https://vercel.com/docs/limits/fair-use-guidelines)). Or use a small server instead. | First client |
+| What "don't share data" means | Files only stay in the client's storage | A client asks for nothing personal to be stored |
+| Resume field extraction | Rules only, behind an interface so a self-hosted model can be added | Real resumes read badly, or volume justifies an AI server |
+| Our own file storage | Cloudflare R2 (S3-compatible, so portable). It may ask for a payment card before creating a bucket (one third-party source; unconfirmed). | Moving to our own server (then local disk) |
+| Resume masking default | Contact details hidden; "blind" mode as a per-client switch | A client wants stricter |
+
+### Build order
+1. **Demo-ready:** demo consultancy with an `isDemo` flag that blocks all real messages, a reset-to-fresh-data command, invite-only signup, password reset.
+2. **Resumes:** storage layer (our storage and client's own S3-compatible), upload, text reading, rule-based extraction, masking, review screen, blind profile sheet.
+3. **Finish V1:** staff profiles screen, time-tracking timers, monthly branded report and analytics, Razorpay and UPI payment links, interview scheduling page.
+4. **V2:** candidate database, onboarding and exit workflows, document vault (shares the storage layer), policy and handbook builder.
+5. **V3:** contract staffing and per-head billing, deeper analytics. Payroll integrations (SaachiHRMS, INDPayroll, greytHR, Tally) depend on getting access to those vendors' APIs, which we cannot build without.
+
+After each step there is something new to test and demo.
+
+---
+
 ## 1. Decisions made
 
 | Area | Decision |

@@ -2,7 +2,7 @@
 
 One login for an Indian HR consultancy to run every client company: compliance calendar, requisition and profile tracker, JD protection, client portal and GST invoicing.
 
-The product plan is in [`docs/features-and-workflows.md`](docs/features-and-workflows.md). Decisions, open questions, the resume-handling design, the production checklist and deployment notes are in [`docs/roadmap-and-decisions.md`](docs/roadmap-and-decisions.md). This repo is the V1 scaffold of the plan.
+The product plan is in [`docs/features-and-workflows.md`](docs/features-and-workflows.md). Decisions, open questions, the resume-handling design, the production checklist and deployment notes are in [`docs/roadmap-and-decisions.md`](docs/roadmap-and-decisions.md). A click-through test script for every feature is in [`docs/test-checklist.md`](docs/test-checklist.md). This repo is the V1 scaffold of the plan.
 
 ## Stack
 
