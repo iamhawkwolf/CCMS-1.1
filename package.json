@@ -21,6 +21,8 @@
     "test:integration": "vitest run -c vitest.integration.config.ts"
   },
   "dependencies": {
+    "@neon/config": "^1.14.6",
+    "@neon/env": "^2.1.9",
     "@prisma/client": "^6.19.3",
     "@vercel/blob": "^2.9.0",
     "bcryptjs": "^3.0.3",
